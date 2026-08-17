@@ -54,6 +54,64 @@ export const minhasTurmasSaidaSchema = z.object({
   turmas: z.array(turmaSchema),
 });
 
+/** ------------------------------------------------------------- gestão */
+
+export const nivelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+
+export const criarTurmaEntradaSchema = z.object({
+  nome: z.string().trim().min(2, 'Dê um nome à turma.').max(120),
+  idioma: z.string().trim().min(2).max(40),
+});
+
+/**
+ * Matrícula por e-mail, e não por id.
+ *
+ * O professor conhece o e-mail do aluno; o id ele nunca viu. Pedir id obrigaria
+ * a uma tela de busca antes da matrícula — e a pessoa pode nem ter conta ainda,
+ * caso em que o convite fica pendente até ela entrar.
+ */
+export const matricularEntradaSchema = z.object({
+  email: z.string().trim().toLowerCase().email('E-mail inválido.'),
+});
+
+export const matricularSaidaSchema = z.object({
+  situacao: z.enum(['matriculado', 'convidado', 'ja_estava']),
+  aluno: usuarioSchema.nullable(),
+});
+
+export const criarBaralhoEntradaSchema = z.object({
+  titulo: z.string().trim().min(2, 'Dê um título ao baralho.').max(120),
+  nivel: nivelSchema.nullable().optional(),
+});
+
+/** O texto colado inteiro. Quem entende o formato é o servidor. */
+export const importarPalavrasEntradaSchema = z.object({
+  texto: z.string().min(1, 'Cole a lista de palavras.').max(100_000),
+});
+
+export const importarPalavrasSaidaSchema = z.object({
+  criadas: z.number().int().min(0),
+  /** Já existiam no baralho: ignoradas, não duplicadas. */
+  jaExistiam: z.number().int().min(0),
+  problemas: z.array(
+    z.object({ linha: z.number().int(), texto: z.string(), motivo: z.string() }),
+  ),
+  repetidas: z.array(
+    z.object({ linha: z.number().int(), texto: z.string(), motivo: z.string() }),
+  ),
+});
+
+export const baralhoComContagemSchema = z.object({
+  id: identificadorSchema,
+  titulo: z.string(),
+  nivel: nivelSchema.nullable(),
+  palavras: z.number().int().min(0),
+});
+
+export const baralhosSaidaSchema = z.object({
+  baralhos: z.array(baralhoComContagemSchema),
+});
+
 /** -------------------------------------------------- sessão de estudo */
 
 export const sessaoEntradaSchema = z.object({
@@ -117,6 +175,26 @@ export const turmaDoProfessorSchema = turmaSchema.extend({
   ),
 });
 
+/**
+ * As palavras travadas da turma inteira, agrupadas por palavra.
+ *
+ * É a virada de perspectiva do painel: o professor prepara **uma aula**, não
+ * trinta atendimentos individuais. Agrupar por aluno responde "como vai fulano";
+ * agrupar por palavra responde "o que eu ensino na segunda-feira".
+ */
+export const palavrasTravadasSaidaSchema = z.object({
+  palavras: z.array(
+    z.object({
+      cartao: cartaoSchema,
+      /** Quantos alunos travaram nesta palavra. */
+      alunos: z.number().int().min(1),
+      /** Soma dos erros de todos eles. */
+      errosTotais: z.number().int().min(0),
+      nomes: z.array(z.string()),
+    }),
+  ),
+});
+
 export const cartasSinalizadasSaidaSchema = z.object({
   aluno: usuarioSchema,
   cartas: z.array(
@@ -147,6 +225,15 @@ export const erroSchema = z.object({
 });
 
 export type MinhasTurmasSaida = z.infer<typeof minhasTurmasSaidaSchema>;
+export type Nivel = z.infer<typeof nivelSchema>;
+export type CriarTurmaEntrada = z.infer<typeof criarTurmaEntradaSchema>;
+export type MatricularEntrada = z.infer<typeof matricularEntradaSchema>;
+export type MatricularSaida = z.infer<typeof matricularSaidaSchema>;
+export type CriarBaralhoEntrada = z.infer<typeof criarBaralhoEntradaSchema>;
+export type ImportarPalavrasEntrada = z.infer<typeof importarPalavrasEntradaSchema>;
+export type ImportarPalavrasSaida = z.infer<typeof importarPalavrasSaidaSchema>;
+export type BaralhoComContagem = z.infer<typeof baralhoComContagemSchema>;
+export type BaralhosSaida = z.infer<typeof baralhosSaidaSchema>;
 export type EntrarEntrada = z.infer<typeof entrarEntradaSchema>;
 export type EntrarSaida = z.infer<typeof entrarSaidaSchema>;
 export type SessaoEntrada = z.infer<typeof sessaoEntradaSchema>;
@@ -155,5 +242,6 @@ export type EnviarRevisoesEntrada = z.infer<typeof enviarRevisoesEntradaSchema>;
 export type EnviarRevisoesSaida = z.infer<typeof enviarRevisoesSaidaSchema>;
 export type TurmaDoProfessor = z.infer<typeof turmaDoProfessorSchema>;
 export type CartasSinalizadasSaida = z.infer<typeof cartasSinalizadasSaidaSchema>;
+export type PalavrasTravadasSaida = z.infer<typeof palavrasTravadasSaidaSchema>;
 export type CodigoDeErro = z.infer<typeof codigoDeErroSchema>;
 export type Erro = z.infer<typeof erroSchema>;

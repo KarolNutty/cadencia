@@ -1,158 +1,115 @@
-import { useQuery } from '@tanstack/react-query';
-import type { CartasSinalizadasSaida } from '@cadencia/contrato';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CartasSinalizadasSaida, TurmaDoProfessor } from '@cadencia/contrato';
 import { diaDeEstudoDe } from '@cadencia/dominio';
-import { cores, fontes } from '../../compartilhado/estilos';
+import { Cabecalho, useTurma } from '../../compartilhado/Estrutura';
 import { useSessao } from '../../compartilhado/sessao';
+import { destravarPalavra } from '../gestao/api';
 import { desdeQuando } from './leitura';
-import type { Aluno } from './TelaTurma';
 
 /**
- * O que levar para a aula deste aluno.
+ * O que travou para um aluno específico.
  *
- * É a tela que justifica o painel inteiro. O professor não quer um gráfico de
- * engajamento — quer a lista de palavras que ele precisa explicar de novo na
- * segunda-feira.
+ * A tela da aula responde "o que ensino hoje". Esta responde "e a Marina, como
+ * está?" — a pergunta que vem quando o professor repara em alguém.
  */
 export function PainelDoAluno({
-  turmaId,
-  aluno,
+  alunoId,
   aoVoltar,
 }: {
-  turmaId: string;
-  aluno: Aluno;
+  alunoId: string;
   aoVoltar: () => void;
 }) {
   const { cliente } = useSessao();
+  const { turma } = useTurma();
+  const consultas = useQueryClient();
+
   const hoje = diaDeEstudoDe(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
 
-  const consulta = useQuery({
-    queryKey: ['sinalizadas', turmaId, aluno.usuario.id],
-    queryFn: () =>
-      cliente.chamar<CartasSinalizadasSaida>(
-        `/turmas/${turmaId}/alunos/${aluno.usuario.id}/sinalizadas`,
-      ),
+  const painel = useQuery({
+    queryKey: ['painel', turma?.id],
+    queryFn: () => cliente.chamar<TurmaDoProfessor>(`/turmas/${turma!.id}/alunos`),
+    enabled: Boolean(turma),
   });
 
-  const cartas = consulta.data?.cartas ?? [];
+  const travadas = useQuery({
+    queryKey: ['sinalizadas', turma?.id, alunoId],
+    queryFn: () =>
+      cliente.chamar<CartasSinalizadasSaida>(
+        `/turmas/${turma!.id}/alunos/${alunoId}/sinalizadas`,
+      ),
+    enabled: Boolean(turma),
+  });
+
+  const destravar = useMutation({
+    mutationFn: (cartaoId: string) =>
+      destravarPalavra(cliente, turma!.id, alunoId, cartaoId),
+    onSuccess: () => {
+      void consultas.invalidateQueries({ queryKey: ['sinalizadas'] });
+      void consultas.invalidateQueries({ queryKey: ['palavras'] });
+      void consultas.invalidateQueries({ queryKey: ['painel'] });
+    },
+  });
+
+  const aluno = painel.data?.alunos.find((candidato) => candidato.usuario.id === alunoId);
+  const cartas = travadas.data?.cartas ?? [];
 
   return (
-    <div style={{ minHeight: '100vh', background: cores.fundo }}>
-      <header
-        style={{ borderBottom: `1px solid ${cores.linha}`, background: cores.superficie }}
-      >
-        <div style={{ maxWidth: 760, margin: '0 auto', padding: '16px 24px' }}>
-          <button onClick={aoVoltar} style={voltar}>
-            ← Turma
-          </button>
-          <h1 style={{ fontFamily: fontes.titulo, fontSize: 26, margin: '10px 0 0' }}>
-            {aluno.usuario.nome}
-          </h1>
-          <p
-            style={{
-              fontFamily: fontes.texto,
-              fontSize: 13.5,
-              color: cores.textoFraco,
-              margin: '4px 0 0',
-            }}
+    <>
+      <button className="discreto" onClick={aoVoltar} style={{ marginBottom: 18 }}>
+        ← Voltar
+      </button>
+
+      <Cabecalho
+        olho="Aluno"
+        titulo={aluno?.usuario.nome ?? 'Carregando…'}
+        nota={
+          aluno
+            ? `Estudou ${desdeQuando(aluno.ultimoEstudo, hoje)} · sequência de ${aluno.sequenciaDeDias} ${aluno.sequenciaDeDias === 1 ? 'dia' : 'dias'} · ${aluno.vencendoHoje} ${aluno.vencendoHoje === 1 ? 'palavra' : 'palavras'} para revisar hoje`
+            : undefined
+        }
+      />
+
+      {travadas.isPending && <p className="aviso">Carregando…</p>}
+
+      {travadas.isSuccess && cartas.length === 0 && (
+        <p className="aviso">
+          Nada travou. O que este aluno erra, ele recupera sozinho revisando — não precisa
+          de aula sobre isso.
+        </p>
+      )}
+
+      <ul className="verbetes" aria-label="Palavras travadas deste aluno">
+        {cartas.map((carta, ordem) => (
+          <li
+            className="verbete"
+            key={carta.cartao.id}
+            style={{ '--ordem': ordem } as React.CSSProperties}
           >
-            estudou {desdeQuando(aluno.ultimoEstudo, hoje)} · sequência de{' '}
-            {aluno.sequenciaDeDias} {aluno.sequenciaDeDias === 1 ? 'dia' : 'dias'}
-          </p>
-        </div>
-      </header>
+            <p className="verbete__palavra">{carta.cartao.frente}</p>
+            <span className="verbete__contagem verbete__contagem--critica">
+              {carta.lapsos} {carta.lapsos === 1 ? 'erro' : 'erros'}
+            </span>
+            <p className="verbete__traducao">{carta.cartao.verso}</p>
+            {carta.cartao.dica && <p className="verbete__dica">{carta.cartao.dica}</p>}
 
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px 64px' }}>
-        <h2 style={{ fontFamily: fontes.texto, fontSize: 15, color: cores.textoMedio }}>
-          Palavras travadas
-        </h2>
+            <div className="verbete__rodape">
+              <span className="verbete__quem">
+                última revisão {desdeQuando(carta.ultimaRevisao, hoje)}
+              </span>
 
-        {consulta.isPending && (
-          <p style={{ fontFamily: fontes.texto, color: cores.textoMedio }}>Carregando…</p>
-        )}
-
-        {consulta.isSuccess && cartas.length === 0 && (
-          <p style={{ fontFamily: fontes.texto, color: cores.textoMedio, lineHeight: 1.6 }}>
-            Nenhuma palavra travou. O que este aluno erra, ele recupera sozinho revisando —
-            não precisa de aula sobre isso.
-          </p>
-        )}
-
-        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0 0' }}>
-          {cartas.map((carta) => (
-            <li
-              key={carta.cartao.id}
-              style={{
-                background: cores.superficie,
-                border: `1px solid ${cores.linha}`,
-                borderRadius: 12,
-                padding: 18,
-                marginBottom: 10,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 16,
-              }}
-            >
-              <div>
-                <p
-                  style={{
-                    fontFamily: fontes.titulo,
-                    fontSize: 22,
-                    color: cores.texto,
-                    margin: 0,
-                  }}
-                >
-                  {carta.cartao.frente}
-                </p>
-                <p
-                  style={{
-                    fontFamily: fontes.texto,
-                    fontSize: 14.5,
-                    color: cores.textoMedio,
-                    margin: '2px 0 0',
-                  }}
-                >
-                  {carta.cartao.verso}
-                </p>
-              </div>
-
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p
-                  style={{
-                    fontFamily: fontes.texto,
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: cores.atencao,
-                    margin: 0,
-                  }}
-                >
-                  {carta.lapsos} erros
-                </p>
-                <p
-                  style={{
-                    fontFamily: fontes.texto,
-                    fontSize: 12.5,
-                    color: cores.textoFraco,
-                    margin: '2px 0 0',
-                  }}
-                >
-                  {desdeQuando(carta.ultimaRevisao, hoje)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </main>
-    </div>
+              {/* Fecha o ciclo: o professor explica em aula e devolve a palavra
+                  ao estudo. Sem isto ela sumiria da vida do aluno para sempre. */}
+              <button
+                className="botao botao--pequeno botao--secundario"
+                disabled={destravar.isPending}
+                onClick={() => destravar.mutate(carta.cartao.id)}
+              >
+                Revisamos em aula
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
-
-const voltar: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  padding: 0,
-  fontFamily: fontes.texto,
-  fontSize: 14,
-  color: cores.marca,
-  cursor: 'pointer',
-};

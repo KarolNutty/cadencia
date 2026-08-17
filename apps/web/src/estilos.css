@@ -1,0 +1,880 @@
+/*
+ * Painel do professor — direção visual
+ *
+ * Vivo e colorido, na linguagem dos aplicativos de idioma: cor saturada em
+ * bloco, formas gordas, tipografia pesada e botões que parecem ter espessura.
+ *
+ * A regra que mantém isso legível num painel de trabalho: **a cor é semântica,
+ * nunca decorativa.** Cada tom significa um estado — travado, sumido, atrasado,
+ * em dia — e nada recebe cor por ser bonito. Num produto para aluno a cor pode
+ * animar; num painel que o professor abre com cinco minutos antes da aula, ela
+ * precisa dizer para onde olhar.
+ *
+ * A assinatura é o **botão com espessura**: uma sombra sólida embaixo que some
+ * ao apertar, como tecla de verdade. É o gesto que dá o tom do produto inteiro.
+ */
+
+:root {
+  --violeta: #6b4eff;
+  --violeta-escuro: #4c31d6;
+  --violeta-claro: #efecff;
+
+  --coral: #ff5a3c;
+  --coral-escuro: #d63a1f;
+  --coral-claro: #ffece8;
+
+  --ambar: #ffa41b;
+  --ambar-escuro: #d97f00;
+  --ambar-claro: #fff4e0;
+
+  --azul: #2f8cff;
+  --azul-claro: #e6f1ff;
+
+  --menta: #17c08a;
+  --menta-escuro: #0e9a6c;
+  --menta-claro: #e2f8f0;
+
+  --tinta: #1b1b32;
+  --tinta-media: #5f5f7e;
+  --tinta-fraca: #9a9ab5;
+
+  --fundo: #f5f6fc;
+  --branco: #ffffff;
+  --borda: #e4e4f2;
+  --borda-forte: #d3d3e8;
+
+  --letra: 'Nunito', system-ui, -apple-system, sans-serif;
+
+  --canto: 16px;
+  --canto-grande: 22px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--letra);
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--violeta);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+h1,
+h2,
+p,
+ul {
+  margin: 0;
+}
+
+/* ==========================================================================
+   Botões com espessura — a assinatura
+   ========================================================================== */
+
+.botao {
+  width: 100%;
+  padding: 14px 22px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--branco);
+  background: var(--violeta);
+  border: none;
+  border-radius: var(--canto);
+  /* A sombra sólida é a espessura da tecla. */
+  box-shadow: 0 4px 0 var(--violeta-escuro);
+  transition:
+    transform 60ms,
+    box-shadow 60ms;
+}
+
+.botao:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+/* Ao apertar, a tecla afunda: o botão desce exatamente a altura da sombra. */
+.botao:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--violeta-escuro);
+}
+
+.botao:disabled {
+  background: var(--borda-forte);
+  color: #8c8ca8;
+  box-shadow: 0 4px 0 #bfbfd8;
+  cursor: not-allowed;
+}
+
+.botao--pequeno {
+  width: auto;
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.botao--secundario {
+  background: var(--branco);
+  color: var(--violeta);
+  border: 2px solid var(--borda-forte);
+  box-shadow: 0 4px 0 var(--borda-forte);
+}
+
+.botao--secundario:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--borda-forte);
+}
+
+.perigo {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+}
+
+.perigo:hover {
+  color: var(--coral-escuro);
+  background: var(--coral-claro);
+}
+
+.discreto {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tinta-media);
+}
+
+.discreto:hover {
+  background: var(--violeta-claro);
+  color: var(--violeta);
+}
+
+/* ==========================================================================
+   Estrutura
+   ========================================================================== */
+
+.painel {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .painel {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lateral {
+  background: var(--branco);
+  border-right: 2px solid var(--borda);
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .lateral {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid var(--borda);
+  }
+}
+
+.lateral__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lateral__nome {
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--violeta);
+}
+
+.lateral__papel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  display: block;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.menu__item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--tinta-media);
+}
+
+.menu__item:hover {
+  background: var(--fundo);
+}
+
+/* A seção ativa recebe cor cheia e contorno: presença, não sublinhado. */
+.menu__item--ativo,
+.menu__item--ativo:hover {
+  background: var(--violeta-claro);
+  border-color: var(--violeta);
+  color: var(--violeta);
+}
+
+.menu__rotulo {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.menu__descricao {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+}
+
+.menu__item--ativo .menu__descricao {
+  color: var(--violeta);
+  opacity: 0.75;
+}
+
+.lateral__rodape {
+  border-top: 2px solid var(--borda);
+  padding-top: 14px;
+}
+
+.lateral__quem {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tinta-media);
+  margin-bottom: 4px;
+}
+
+.conteudo {
+  padding: 36px 40px 96px;
+  max-width: 1060px;
+}
+
+@media (max-width: 700px) {
+  .conteudo {
+    padding: 24px 18px 64px;
+  }
+}
+
+/* ==========================================================================
+   Cabeçalho de seção
+   ========================================================================== */
+
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.olho {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  padding: 5px 11px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.cabecalho__titulo {
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  max-width: 20ch;
+}
+
+.cabecalho__nota {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.55;
+  margin-top: 10px;
+  max-width: 56ch;
+}
+
+/* ==========================================================================
+   Blocos
+   ========================================================================== */
+
+.bloco {
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto-grande);
+  padding: 22px;
+}
+
+.bloco + .bloco {
+  margin-top: 18px;
+}
+
+.bloco__titulo {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-bottom: 16px;
+}
+
+.duas-colunas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 26px;
+  align-items: start;
+}
+
+@media (max-width: 980px) {
+  .duas-colunas {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Palavras travadas — os cartões
+   ========================================================================== */
+
+.verbetes {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/*
+ * O cartão de palavra.
+ *
+ * A cor da borda e do selo dizem quanta gente empacou: coral para o que a turma
+ * inteira travou, âmbar para poucos. É a informação que o professor precisa ver
+ * de longe, sem ler nenhum número.
+ */
+.verbete {
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto-grande);
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 18px;
+  align-items: start;
+}
+
+.verbete--critico {
+  border-color: var(--coral);
+  background: linear-gradient(180deg, var(--coral-claro) 0%, var(--branco) 68%);
+}
+
+.verbete__palavra {
+  grid-column: 1;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.verbete__traducao {
+  grid-column: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tinta-media);
+}
+
+.verbete__dica {
+  grid-column: 1;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+  margin-top: 2px;
+}
+
+.verbete__rodape {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+}
+
+.verbete__quem {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tinta-media);
+}
+
+/* O selo de contagem: grande, redondo e colorido pela gravidade. */
+.verbete__contagem {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: start;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ambar-escuro);
+  background: var(--ambar-claro);
+  border: 2px solid var(--ambar);
+  padding: 6px 13px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.verbete__contagem--critica {
+  color: var(--coral-escuro);
+  background: var(--branco);
+  border-color: var(--coral);
+}
+
+/* ==========================================================================
+   A turma
+   ========================================================================== */
+
+.lateral__titulo {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-bottom: 12px;
+}
+
+.turma {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.turma__aluno {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 12px 14px;
+}
+
+.turma__nome {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--tinta);
+}
+
+.turma__nome:hover {
+  color: var(--violeta);
+}
+
+.turma__quando {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+  margin-top: 2px;
+}
+
+.turma__estado {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.turma__estado--travado {
+  color: var(--coral-escuro);
+  background: var(--coral-claro);
+}
+.turma__estado--sumido {
+  color: var(--ambar-escuro);
+  background: var(--ambar-claro);
+}
+.turma__estado--atrasado {
+  color: #1d63c9;
+  background: var(--azul-claro);
+}
+.turma__estado--em_dia {
+  color: var(--menta-escuro);
+  background: var(--menta-claro);
+}
+
+/* ==========================================================================
+   Listas, campos e mensagens
+   ========================================================================== */
+
+.lista {
+  list-style: none;
+  padding: 0;
+}
+
+.lista__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 2px solid var(--borda);
+}
+
+.lista__item:last-child {
+  border-bottom: none;
+}
+
+.lista__principal {
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+.lista__apoio {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+  margin-top: 2px;
+}
+
+.campo {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.campo__rotulo {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-bottom: 7px;
+}
+
+.campo__entrada {
+  width: 100%;
+  padding: 13px 15px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: 14px;
+}
+
+.campo__entrada:focus {
+  border-color: var(--violeta);
+  outline: none;
+}
+
+.campo__entrada::placeholder {
+  color: var(--tinta-fraca);
+  font-weight: 600;
+}
+
+.linha-de-campos {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.linha-de-campos .campo {
+  flex: 1;
+  min-width: 190px;
+  margin-bottom: 0;
+}
+
+.area {
+  width: 100%;
+  min-height: 220px;
+  padding: 15px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  resize: vertical;
+}
+
+.area:focus {
+  border-color: var(--violeta);
+  outline: none;
+}
+
+.area::placeholder {
+  color: var(--tinta-fraca);
+}
+
+.aviso {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.6;
+  padding: 28px 0;
+  max-width: 52ch;
+}
+
+.aviso--erro {
+  color: var(--coral-escuro);
+}
+
+.retorno {
+  border-radius: var(--canto);
+  border: 2px solid;
+  padding: 14px 16px;
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.55;
+  margin-top: 16px;
+}
+
+.retorno--bom {
+  background: var(--menta-claro);
+  border-color: var(--menta);
+  color: var(--menta-escuro);
+}
+
+.retorno--atencao {
+  background: var(--ambar-claro);
+  border-color: var(--ambar);
+  color: var(--ambar-escuro);
+}
+
+.retorno--ruim {
+  background: var(--coral-claro);
+  border-color: var(--coral);
+  color: var(--coral-escuro);
+}
+
+.retorno__lista {
+  margin-top: 8px;
+  padding-left: 20px;
+  font-weight: 600;
+}
+
+.erro {
+  color: var(--coral-escuro);
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   Entrada
+   ========================================================================== */
+
+.entrada {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--fundo);
+}
+
+.entrada__forma {
+  width: 100%;
+  max-width: 380px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: 26px;
+  padding: 34px 30px;
+}
+
+.entrada__marca {
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--violeta);
+}
+
+.entrada__nota {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tinta-media);
+  margin: 4px 0 28px;
+}
+
+/* ==========================================================================
+   Movimento
+   ========================================================================== */
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.verbete {
+  animation: entrar 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--ordem, 0) * 55ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .verbete {
+    animation: none;
+  }
+  .botao {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Escolha — o seletor próprio
+   ========================================================================== */
+
+.escolha {
+  position: relative;
+}
+
+.escolha__rotulo {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-fraca);
+  margin-bottom: 6px;
+}
+
+.escolha__gatilho {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.escolha__gatilho:hover {
+  border-color: var(--borda-forte);
+}
+
+.escolha__gatilho--aberto {
+  border-color: var(--violeta);
+}
+
+.escolha__valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.escolha__seta {
+  color: var(--tinta-fraca);
+  font-size: 12px;
+  transition: transform 140ms;
+}
+
+.escolha__seta--aberta {
+  transform: rotate(180deg);
+  color: var(--violeta);
+}
+
+.escolha__lista {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  background: var(--branco);
+  border: 2px solid var(--violeta);
+  border-radius: 16px;
+  /* A sombra é o que separa o menu do conteúdo atrás dele. */
+  box-shadow: 0 10px 24px rgba(27, 27, 50, 0.12);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.escolha__opcao {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: none;
+  border: none;
+  border-radius: 11px;
+  text-align: left;
+}
+
+.escolha__opcao--focada {
+  background: var(--violeta-claro);
+}
+
+.escolha__opcao--escolhida {
+  color: var(--violeta);
+  font-weight: 800;
+}

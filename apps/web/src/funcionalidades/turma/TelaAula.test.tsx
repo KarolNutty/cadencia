@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
-import usuario from '@testing-library/user-event';
+import { render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Cliente } from '@cadencia/cliente-api';
+import { Estrutura } from '../../compartilhado/Estrutura';
 import { ProvedorDeSessao } from '../../compartilhado/sessao';
-import { TelaTurma } from './TelaTurma';
+import { TelaAula } from './TelaAula';
 
 /**
  * A tela é exercitada de verdade, com um cliente falso no lugar da rede.
@@ -79,7 +79,9 @@ function montar(cliente: Cliente) {
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
     >
       <ProvedorDeSessao clienteDeTeste={cliente}>
-        <TelaTurma />
+        <Estrutura secao="aula" aoTrocarSecao={() => {}}>
+          <TelaAula aoAbrirAluno={() => {}} />
+        </Estrutura>
       </ProvedorDeSessao>
     </QueryClientProvider>,
   );
@@ -133,22 +135,29 @@ describe('os verbetes', () => {
     montar(clienteFalso(RESPOSTAS));
 
     await screen.findByText('though');
-    const itens = screen.getAllByRole('listitem');
 
-    expect(within(itens[0]!).getByText('though')).toBeTruthy();
+    // Buscar `listitem` na página inteira pegaria também os itens do menu
+    // lateral. A lista tem nome acessível, o que resolve o teste e melhora a
+    // leitura por leitor de tela.
+    const verbetes = within(
+      screen.getByRole('list', { name: /palavras travadas/i }),
+    ).getAllByRole('listitem');
+
+    expect(within(verbetes[0]!).getByText('though')).toBeTruthy();
   });
 
-  it('a espinha engrossa conforme mais alunos travam', async () => {
-    // É informação, não enfeite: dá para varrer a coluna sem ler número.
+  it('marca com cor forte a palavra que muita gente travou', async () => {
+    // A gravidade precisa ser vista de longe, sem ler número nenhum.
     montar(clienteFalso(RESPOSTAS));
 
     await screen.findByText('though');
-    const itens = screen.getAllByRole('listitem');
 
-    const grossa = itens[0]!.style.getPropertyValue('--espinha');
-    const fina = itens[1]!.style.getPropertyValue('--espinha');
+    const verbetes = within(
+      screen.getByRole('list', { name: /palavras travadas/i }),
+    ).getAllByRole('listitem');
 
-    expect(parseInt(grossa, 10)).toBeGreaterThan(parseInt(fina, 10));
+    expect(verbetes[0]!.className).toContain('verbete--critico');
+    expect(verbetes[1]!.className).not.toContain('verbete--critico');
   });
 });
 
@@ -160,27 +169,11 @@ describe('a turma na lateral', () => {
     expect(screen.getByText('travado')).toBeTruthy();
   });
 
-  it('abre o detalhe ao clicar no nome', async () => {
-    const cliente = clienteFalso({
-      ...RESPOSTAS,
-      '/turmas/t1/alunos/b2/sinalizadas': {
-        aluno: RESPOSTAS['/turmas/t1/alunos'].alunos[1]!.usuario,
-        cartas: [
-          {
-            cartao: { id: 'c1', frente: 'though', verso: 'embora', dica: null },
-            lapsos: 5,
-            ultimaRevisao: HOJE,
-          },
-        ],
-      },
-    });
+  it('o nome do aluno é um botão, para abrir o detalhe', async () => {
+    // A navegação em si é responsabilidade do App; aqui basta garantir que a
+    // tela oferece o caminho.
+    montar(clienteFalso(RESPOSTAS));
 
-    montar(cliente);
-
-    await usuario.click(await screen.findByText('Bruno Lima'));
-
-    expect(await screen.findByText('Aluno')).toBeTruthy();
-    await waitFor(() => expect(screen.getByText('embora')).toBeTruthy());
-    expect(screen.getByText('5 erros')).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /Bruno Lima/ })).toBeTruthy();
   });
 });

@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { ProvedorDeSessao } from './compartilhado/sessao';
+import './estilos.css';
 
 const consultas = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },

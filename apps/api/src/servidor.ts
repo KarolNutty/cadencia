@@ -12,6 +12,8 @@ import { criarServicoDeAutenticacao } from './funcionalidades/autenticacao/servi
 import { registrarRotasDeAutenticacao } from './funcionalidades/autenticacao/rotas';
 import { registrarRotasDeEstudo } from './funcionalidades/estudo/rotas';
 import { criarServicoDeEstudo } from './funcionalidades/estudo/servico';
+import { registrarRotasDeGestao } from './funcionalidades/gestao/rotas';
+import { criarServicoDeGestao } from './funcionalidades/gestao/servico';
 import { criarEmissor } from './funcionalidades/autenticacao/tokens';
 
 export interface OpcoesDoServidor {
@@ -138,6 +140,7 @@ export async function construirServidor({
 
   await registrarRotasDeAutenticacao(app, { autenticacao, producao: ambiente.producao });
   await registrarRotasDeEstudo(app, { estudo: criarServicoDeEstudo(sql) });
+  await registrarRotasDeGestao(app, { gestao: criarServicoDeGestao(sql) });
 
   return { app, sql };
 }

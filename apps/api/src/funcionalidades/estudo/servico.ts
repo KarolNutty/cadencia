@@ -161,6 +161,12 @@ export function criarServicoDeEstudo(sql: Banco) {
       };
     },
 
+    /** O que levar para a próxima aula da turma. */
+    async palavrasParaAula(professorId: string, turmaId: string) {
+      await exigirTurmaDoProfessor(professorId, turmaId);
+      return { palavras: await repositorio.palavrasTravadasDaTurma(turmaId) };
+    },
+
     /** O que levar para a próxima aula deste aluno. */
     async sinalizadasDoAluno(professorId: string, turmaId: string, alunoId: string) {
       await exigirTurmaDoProfessor(professorId, turmaId);

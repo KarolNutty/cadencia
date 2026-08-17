@@ -398,6 +398,52 @@ describe('painel do professor', () => {
     expect(resposta.statusCode).toBe(403);
   });
 
+  it('agrupa as palavras travadas da turma, com quem travou em cada uma', async () => {
+    // A pergunta do professor é "o que eu ensino na aula", e não "como vai cada
+    // um". Agrupar por palavra é o que responde isso.
+    const { professorAcesso, acesso, turmaId, cartoes } = await cenarioComProfessor();
+
+    for (let i = 0; i < 4; i += 1) {
+      await app.inject({
+        method: 'POST',
+        url: '/estudo/revisoes',
+        headers: comToken(acesso),
+        payload: {
+          turmaId,
+          loteId: randomUUID(),
+          revisoes: [{ cartaoId: cartoes[0], avaliacao: 'errei', dia: hoje() }],
+        },
+      });
+    }
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: `/turmas/${turmaId}/palavras-travadas`,
+      headers: comToken(professorAcesso),
+    });
+
+    expect(resposta.statusCode).toBe(200);
+
+    const [primeira] = resposta.json().palavras;
+    expect(primeira.cartao.frente).toBe('palavra 0');
+    expect(primeira.alunos).toBe(1);
+    expect(primeira.errosTotais).toBe(4);
+    expect(primeira.nomes).toEqual(['Ana Beatriz']);
+  });
+
+  it('professor não vê as palavras de turma alheia', async () => {
+    const meu = await cenarioComProfessor();
+    const alheio = await cenarioComProfessor();
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: `/turmas/${alheio.turmaId}/palavras-travadas`,
+      headers: comToken(meu.professorAcesso),
+    });
+
+    expect(resposta.statusCode).toBe(404);
+  });
+
   it('mostra as cartas sinalizadas de um aluno', async () => {
     const { professorAcesso, acesso, turmaId, cartoes, aluno } =
       await cenarioComProfessor();

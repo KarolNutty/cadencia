@@ -24,6 +24,14 @@ export {
 } from './agendamento';
 
 export {
+  type PalavraImportada,
+  type ProblemaNaLinha,
+  type ResultadoDaImportacao,
+  EXEMPLO_DE_LISTA,
+  lerLista,
+} from './importacao';
+
+export {
   type CartaAgendada,
   type OpcoesSessao,
   type ResumoDoAluno,

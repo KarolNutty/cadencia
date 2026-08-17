@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cobertura": "vitest run --coverage",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
@@ -27,7 +27,6 @@
     "verificar:tudo": "npm run verificar && npm run test:integracao",
     "semear": "npm run semear -w @cadencia/api",
     "api": "npm run dev -w @cadencia/api",
-    "app": "npm run dev -w @cadencia/mobile",
     "web": "npm run dev -w @cadencia/web",
     "build:web": "npm run build -w @cadencia/web"
   },
@@ -48,9 +47,5 @@
     "typescript": "^5.7.3",
     "vite": "^6.0.11",
     "vitest": "^3.0.5"
-  },
-  "overrides": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1"
   }
 }

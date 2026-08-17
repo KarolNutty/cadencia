@@ -68,8 +68,11 @@ export function criarRepositorioDeEstudo(sql: Executor) {
      */
     async temMatricula(alunoId: string, turmaId: string): Promise<boolean> {
       const linhas = await sql`
-        SELECT 1 FROM matriculas
-        WHERE aluno_id = ${alunoId} AND turma_id = ${turmaId}
+        SELECT 1 FROM matriculas m
+        JOIN turmas t ON t.id = m.turma_id
+        WHERE m.aluno_id = ${alunoId}
+          AND m.turma_id = ${turmaId}
+          AND t.arquivada_em IS NULL
       `;
       return linhas.length > 0;
     },
@@ -85,10 +88,13 @@ export function criarRepositorioDeEstudo(sql: Executor) {
       usuarioId: string,
       papel: 'aluno' | 'professor',
     ): Promise<{ id: string; nome: string; idioma: string }[]> {
+      // `arquivada_em IS NULL` nos dois ramos: turma arquivada some para o
+      // professor e para o aluno. Filtrar só de um lado deixaria o aluno
+      // estudando uma turma que, para a escola, já acabou.
       if (papel === 'professor') {
         return sql<{ id: string; nome: string; idioma: string }[]>`
           SELECT id, nome, idioma FROM turmas
-          WHERE professor_id = ${usuarioId}
+          WHERE professor_id = ${usuarioId} AND arquivada_em IS NULL
           ORDER BY criada_em DESC
         `;
       }
@@ -97,7 +103,7 @@ export function criarRepositorioDeEstudo(sql: Executor) {
         SELECT t.id, t.nome, t.idioma
         FROM turmas t
         JOIN matriculas m ON m.turma_id = t.id
-        WHERE m.aluno_id = ${usuarioId}
+        WHERE m.aluno_id = ${usuarioId} AND t.arquivada_em IS NULL
         ORDER BY m.matriculado_em DESC
       `;
     },
@@ -126,7 +132,10 @@ export function criarRepositorioDeEstudo(sql: Executor) {
     /** O professor é dono desta turma? */
     async ehDonoDaTurma(professorId: string, turmaId: string): Promise<boolean> {
       const linhas = await sql`
-        SELECT 1 FROM turmas WHERE id = ${turmaId} AND professor_id = ${professorId}
+        SELECT 1 FROM turmas
+        WHERE id = ${turmaId}
+          AND professor_id = ${professorId}
+          AND arquivada_em IS NULL
       `;
       return linhas.length > 0;
     },
@@ -190,6 +199,59 @@ export function criarRepositorioDeEstudo(sql: Executor) {
         ultimoEstudo: linha.ultimo_estudo === null ? null : paraDia(linha.ultimo_estudo),
         vencendoHoje: Number(linha.vencendo_hoje),
         sinalizadas: Number(linha.sinalizadas),
+      }));
+    },
+
+    /**
+     * As palavras travadas da turma, agrupadas por palavra.
+     *
+     * A agregação acontece no banco. Trazer os agendamentos e agrupar em
+     * JavaScript funcionaria com uma turma e cairia com a escola inteira — e
+     * `array_agg` já devolve os nomes ordenados, sem consulta extra por palavra.
+     */
+    async palavrasTravadasDaTurma(turmaId: string): Promise<
+      {
+        cartao: Cartao;
+        alunos: number;
+        errosTotais: number;
+        nomes: string[];
+      }[]
+    > {
+      const linhas = await sql<
+        {
+          id: string;
+          frente: string;
+          verso: string;
+          dica: string | null;
+          alunos: string;
+          erros_totais: string;
+          nomes: string[];
+        }[]
+      >`
+        SELECT c.id, c.frente, c.verso, c.dica,
+               count(*) AS alunos,
+               sum(a.lapsos) AS erros_totais,
+               array_agg(u.nome ORDER BY u.nome) AS nomes
+        FROM agendamentos a
+        JOIN cartoes c ON c.id = a.cartao_id
+        JOIN baralhos b ON b.id = c.baralho_id
+        JOIN usuarios u ON u.id = a.aluno_id
+        JOIN matriculas m ON m.aluno_id = u.id AND m.turma_id = b.turma_id
+        WHERE b.turma_id = ${turmaId} AND a.sinalizado
+        GROUP BY c.id, c.frente, c.verso, c.dica
+        ORDER BY count(*) DESC, sum(a.lapsos) DESC, c.frente
+      `;
+
+      return linhas.map((linha) => ({
+        cartao: {
+          id: linha.id,
+          frente: linha.frente,
+          verso: linha.verso,
+          dica: linha.dica,
+        },
+        alunos: Number(linha.alunos),
+        errosTotais: Number(linha.erros_totais),
+        nomes: linha.nomes,
       }));
     },
 

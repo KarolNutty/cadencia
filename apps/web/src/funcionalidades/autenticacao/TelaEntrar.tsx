@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { FalhaDaApi, SemRede } from '@cadencia/cliente-api';
-import { cores, fontes } from '../../compartilhado/estilos';
 import { useSessao } from '../../compartilhado/sessao';
 
 export function TelaEntrar() {
@@ -19,9 +18,11 @@ export function TelaEntrar() {
     try {
       await entrar(email.trim(), senha);
     } catch (causa) {
+      // Falha de rede recebe texto próprio: dizer "e-mail ou senha incorretos"
+      // seria mentira, e faria a pessoa tentar outra senha à toa.
       setErro(
         causa instanceof SemRede
-          ? 'Sem conexão com o servidor.'
+          ? 'Sem conexão com o servidor. Verifique a internet e tente de novo.'
           : causa instanceof FalhaDaApi
             ? causa.corpo.mensagem
             : 'Não foi possível entrar agora.',
@@ -31,69 +32,28 @@ export function TelaEntrar() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        background: cores.fundo,
-        padding: 24,
-      }}
-    >
+    <main className="entrada">
       {/* Um <form> de verdade: o navegador dá o envio pelo Enter, o
           preenchimento do gerenciador de senhas e a navegação por teclado sem
-          nenhuma linha a mais. Trocar por div com onClick joga tudo isso fora. */}
-      <form onSubmit={enviar} style={{ width: '100%', maxWidth: 380 }}>
-        <h1
-          style={{
-            fontFamily: fontes.titulo,
-            fontSize: 44,
-            color: cores.texto,
-            margin: 0,
-          }}
-        >
-          Cadência
-        </h1>
-        <p
-          style={{
-            fontFamily: fontes.texto,
-            color: cores.textoMedio,
-            marginTop: 8,
-            marginBottom: 32,
-          }}
-        >
-          Painel do professor
-        </p>
+          nenhuma linha a mais. */}
+      <form className="entrada__forma" onSubmit={enviar}>
+        <h1 className="entrada__marca">Cadência</h1>
+        <p className="entrada__nota">Painel do professor</p>
 
         <Campo rotulo="E-mail" tipo="email" valor={email} aoMudar={setEmail} />
         <Campo rotulo="Senha" tipo="password" valor={senha} aoMudar={setSenha} />
 
         {erro !== null && (
-          <p
-            // Anuncia o erro para o leitor de tela assim que ele aparece.
-            role="alert"
-            style={{ color: cores.erro, fontFamily: fontes.texto, fontSize: 14 }}
-          >
+          <p className="erro" role="alert">
             {erro}
           </p>
         )}
 
         <button
+          className="botao"
           type="submit"
+          style={{ marginTop: 16 }}
           disabled={ocupado || email.trim().length < 4 || senha.length < 8}
-          style={{
-            width: '100%',
-            marginTop: 16,
-            padding: '14px 20px',
-            fontFamily: fontes.texto,
-            fontSize: 15,
-            fontWeight: 700,
-            color: '#FFFFFF',
-            background: cores.marca,
-            border: 'none',
-            borderRadius: 10,
-            cursor: 'pointer',
-          }}
         >
           {ocupado ? 'Entrando…' : 'Entrar'}
         </button>
@@ -114,34 +74,14 @@ function Campo({
   aoMudar: (valor: string) => void;
 }) {
   return (
-    <label style={{ display: 'block', marginBottom: 16 }}>
-      <span
-        style={{
-          display: 'block',
-          fontFamily: fontes.texto,
-          fontSize: 13,
-          color: cores.textoMedio,
-          marginBottom: 6,
-        }}
-      >
-        {rotulo}
-      </span>
+    <label className="campo">
+      <span className="campo__rotulo">{rotulo}</span>
       <input
+        className="campo__entrada"
         type={tipo}
         value={valor}
         onChange={(evento) => aoMudar(evento.target.value)}
         autoComplete={tipo === 'email' ? 'email' : 'current-password'}
-        style={{
-          width: '100%',
-          padding: '12px 14px',
-          fontFamily: fontes.texto,
-          fontSize: 15,
-          color: cores.texto,
-          background: cores.superficie,
-          border: `1px solid ${cores.linha}`,
-          borderRadius: 10,
-          boxSizing: 'border-box',
-        }}
       />
     </label>
   );

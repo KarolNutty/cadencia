@@ -62,6 +62,18 @@ export async function registrarRotasDeEstudo(
   );
 
   app.get(
+    '/turmas/:turmaId/palavras-travadas',
+    { preHandler: app.exigirEntrada },
+    async (requisicao) => {
+      const usuario = usuarioDaRequisicao(requisicao);
+      if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
+
+      const { turmaId } = requisicao.params as { turmaId: string };
+      return estudo.palavrasParaAula(usuario.id, turmaId);
+    },
+  );
+
+  app.get(
     '/turmas/:turmaId/alunos/:alunoId/sinalizadas',
     { preHandler: app.exigirEntrada },
     async (requisicao) => {

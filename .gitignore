@@ -1,4 +1,8 @@
 node_modules
+
+# Cache do Expo. Fica quando o app roda a partir daqui, e não é código —
+# entrou uma vez sem ninguém pedir e quebrou a verificação de formatação.
+.expo/
 dist
 apps/web/dist
 coverage
