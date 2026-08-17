@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Cadência",
+    "slug": "cadencia",
+    "scheme": "cadencia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/abertura.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#16141F"
+    },
+    "android": {
+      "package": "br.com.cadencia",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icone-frente.png",
+        "backgroundColor": "#16141F"
+      }
+    },
+    "plugins": ["expo-router", "expo-secure-store", "expo-localization"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "icon": "./assets/icone.png"
+  }
+}

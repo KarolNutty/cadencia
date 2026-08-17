@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@cadencia/contrato": ["./packages/contrato/src/index.ts"],
+      "@cadencia/dominio": ["./packages/dominio/src/index.ts"],
+      "@cadencia/config": ["./packages/config/src/index.ts"],
+      "@cadencia/cliente-api": ["./packages/cliente-api/src/index.ts"]
+    }
+  },
+  "include": [
+    "apps/api/src",
+    "apps/api/testes",
+    "packages/*/src",
+    "vitest.config.ts",
+    "vitest.integracao.config.ts"
+  ],
+  "exclude": ["apps/mobile"]
+}

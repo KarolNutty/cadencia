@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    name: Tipos, lint, formatação e testes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Mesma sequência que roda na máquina local (npm run verificar). Se o
+      # comando do CI diverge do comando do desenvolvedor, o CI vira o primeiro
+      # a saber — e descobrir no GitHub o que o terminal já diria custa caro.
+      - name: Verificar tipos
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatação
+        run: npm run format:check
+
+      - name: Testes
+        run: npm run test:cobertura
+
+  segredos:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico inteiro, não só o último commit: segredo que já entrou
+          # no passado não sai com um commit de remoção — ele continua lá.
+          fetch-depth: 0
+
+      - name: Procurar credenciais no código e no histórico
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependencias:
+    name: Vulnerabilidades conhecidas
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Falha em vulnerabilidade alta ou crítica. Média e baixa entram no
+      # relatório sem travar o build — senão o time aprende a ignorar o CI.
+      - name: Auditar dependências
+        run: npm audit --audit-level=high

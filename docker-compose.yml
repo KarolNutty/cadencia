@@ -1,0 +1,46 @@
+# Postgres para desenvolvimento e para os testes de integração.
+#
+# A mesma imagem e a mesma versão que o CI usa. Testar contra um banco
+# diferente do de produção é descobrir a diferença em produção.
+services:
+  banco:
+    image: postgres:16-alpine
+    container_name: cadencia-banco
+    environment:
+      POSTGRES_USER: cadencia
+      POSTGRES_PASSWORD: cadencia
+      POSTGRES_DB: cadencia
+    ports:
+      - '5432:5432'
+    volumes:
+      - dados:/var/lib/postgresql/data
+    healthcheck:
+      # O compose sobe o container antes de o Postgres aceitar conexão. Sem o
+      # healthcheck, o primeiro comando de migração falha com "connection
+      # refused" e parece problema de configuração.
+      test: ['CMD-SHELL', 'pg_isready -U cadencia -d cadencia']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  banco_teste:
+    image: postgres:16-alpine
+    container_name: cadencia-banco-teste
+    environment:
+      POSTGRES_USER: cadencia
+      POSTGRES_PASSWORD: cadencia
+      POSTGRES_DB: cadencia_teste
+    ports:
+      - '5433:5432'
+    # O banco de teste vive só em memória: ele é recriado a cada execução, e
+    # persistir os dados dele só serviria para um teste sujar o próximo.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cadencia -d cadencia_teste']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  dados:

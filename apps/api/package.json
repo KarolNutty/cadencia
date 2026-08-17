@@ -1,0 +1,30 @@
+{
+  "name": "@cadencia/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API do Cadência.",
+  "main": "./src/principal.ts",
+  "scripts": {
+    "dev": "tsx watch src/principal.ts",
+    "start": "tsx src/principal.ts",
+    "migrar": "tsx src/infra/migrar.ts",
+    "semear": "tsx src/infra/semear.ts"
+  },
+  "dependencies": {
+    "@cadencia/config": "*",
+    "@cadencia/contrato": "*",
+    "@cadencia/dominio": "*",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/rate-limit": "^10.2.2",
+    "@node-rs/argon2": "^2.0.2",
+    "fastify": "^5.2.1",
+    "jose": "^5.9.6",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

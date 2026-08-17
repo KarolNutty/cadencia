@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["vite/client", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@cadencia/cliente-api": ["../../packages/cliente-api/src/index.ts"],
+      "@cadencia/contrato": ["../../packages/contrato/src/index.ts"],
+      "@cadencia/dominio": ["../../packages/dominio/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

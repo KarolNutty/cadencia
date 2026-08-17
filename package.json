@@ -1,0 +1,56 @@
+{
+  "name": "cadencia",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App de estudo de idiomas para escola, com painel do professor.",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cobertura": "vitest run --coverage",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+    "verificar": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build:web",
+    "banco:subir": "docker compose up -d --wait",
+    "banco:derrubar": "docker compose down",
+    "migrar": "npm run migrar -w @cadencia/api",
+    "test:integracao": "vitest run --config vitest.integracao.config.ts",
+    "verificar:tudo": "npm run verificar && npm run test:integracao",
+    "semear": "npm run semear -w @cadencia/api",
+    "api": "npm run dev -w @cadencia/api",
+    "app": "npm run dev -w @cadencia/mobile",
+    "web": "npm run dev -w @cadencia/web",
+    "build:web": "npm run build -w @cadencia/web"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.13.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.0.5",
+    "eslint": "^8.57.1",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11",
+    "vitest": "^3.0.5"
+  },
+  "overrides": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1"
+  }
+}

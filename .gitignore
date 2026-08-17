@@ -1,0 +1,16 @@
+node_modules
+dist
+apps/web/dist
+coverage
+
+# Segredo nunca entra no repositório. Só os arquivos de exemplo.
+#
+# A negação precisa cobrir `.env.teste.example` também: a regra `.env.*` casa
+# com ele, e um `!.env.example` sozinho não desfaz. O exemplo ficaria de fora
+# do repositório sem ninguém notar — até alguém clonar e não conseguir rodar.
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.log
+.DS_Store
