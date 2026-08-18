@@ -18,6 +18,9 @@ import { registrarRotasDeNivelamento } from './funcionalidades/nivelamento/rotas
 import { criarServicoDeNivelamento } from './funcionalidades/nivelamento/servico';
 import { registrarRotasDePontuacao } from './funcionalidades/pontuacao/rotas';
 import { criarServicoDePontuacao } from './funcionalidades/pontuacao/servico';
+import { escolherProvedor } from './funcionalidades/redacao/provedor';
+import { registrarRotasDeRedacao } from './funcionalidades/redacao/rotas';
+import { criarServicoDeRedacao } from './funcionalidades/redacao/servico';
 import { criarEmissor } from './funcionalidades/autenticacao/tokens';
 
 export interface OpcoesDoServidor {
@@ -149,6 +152,11 @@ export async function construirServidor({
     nivelamento: criarServicoDeNivelamento(sql),
   });
   await registrarRotasDePontuacao(app, { pontuacao: criarServicoDePontuacao(sql) });
+  await registrarRotasDeRedacao(app, {
+    // Sem chave, o provedor simulado assume: o projeto roda por completo sem
+    // credencial, e quem clona vê a correção funcionando.
+    redacao: criarServicoDeRedacao(sql, escolherProvedor(ambiente.GEMINI_API_KEY)),
+  });
 
   return { app, sql };
 }

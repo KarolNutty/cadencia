@@ -24,6 +24,22 @@ export {
 } from './agendamento';
 
 export {
+  type AnaliseDaIa,
+  type ApontamentoDaIa,
+  type ApontamentoVerificado,
+  type AvaliacaoDeTamanho,
+  type Criterio,
+  CRITERIOS,
+  MAXIMO_DE_PALAVRAS,
+  NOME_DO_CRITERIO,
+  TAMANHO_ESPERADO,
+  avaliarTamanho,
+  contarPalavras,
+  contarPorCriterio,
+  verificarAnalise,
+} from './redacao';
+
+export {
   type LinhaDoRanking,
   type Ofensiva,
   type PosicaoNoRanking,

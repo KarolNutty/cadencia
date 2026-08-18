@@ -17,12 +17,14 @@ export const SECOES_DO_PROFESSOR = [
   { chave: 'alunos', rotulo: 'Alunos', descricao: 'Quem está na turma' },
   { chave: 'palavras', rotulo: 'Palavras', descricao: 'O conteúdo' },
   { chave: 'turmas', rotulo: 'Turmas', descricao: 'Criar e arquivar' },
+  { chave: 'correcoes', rotulo: 'Redações', descricao: 'Temas e correção' },
 ] as const;
 
 export const SECOES_DO_ALUNO = [
   { chave: 'estudar', rotulo: 'Estudar', descricao: 'O que vence hoje' },
   { chave: 'progresso', rotulo: 'Progresso', descricao: 'Como você está indo' },
   { chave: 'ranking', rotulo: 'Ranking', descricao: 'A turma nesta semana' },
+  { chave: 'redacao', rotulo: 'Redação', descricao: 'Escreva e receba retorno' },
   { chave: 'nivelamento', rotulo: 'Nivelamento', descricao: 'Descubra seu nível' },
 ] as const;
 

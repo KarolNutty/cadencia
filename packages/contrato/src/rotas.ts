@@ -57,6 +57,84 @@ export const minhasTurmasSaidaSchema = z.object({
 /** A escala do Quadro Comum Europeu, usada pelo nivelamento e pelos baralhos. */
 export const nivelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
+/** ----------------------------------------------------------- redação */
+
+export const criterioSchema = z.enum(['gramatica', 'vocabulario', 'coesao', 'adequacao']);
+
+export const apontamentoSchema = z.object({
+  criterio: criterioSchema,
+  trecho: z.string(),
+  sugestao: z.string(),
+  explicacao: z.string(),
+  /**
+   * O trecho existe mesmo no texto do aluno?
+   *
+   * Modelo de linguagem parafraseia sem perceber, e um apontamento que cita
+   * trecho inexistente faz o aluno procurar e não achar. Vem marcado em vez de
+   * escondido: esconder tiraria do professor a chance de ver o modelo errando.
+   */
+  encontrado: z.boolean(),
+});
+
+export const tamanhoSchema = z.object({
+  palavras: z.number().int().min(0),
+  minimo: z.number().int().min(0),
+  ideal: z.number().int().min(0),
+  situacao: z.enum(['curto', 'aceitavel', 'no_alvo']),
+});
+
+export const temaDeRedacaoSchema = z.object({
+  id: identificadorSchema,
+  titulo: z.string(),
+  enunciado: z.string(),
+  nivel: nivelSchema,
+  entregue: z.boolean(),
+  corrigida: z.boolean(),
+});
+
+export const temasSaidaSchema = z.object({ temas: z.array(temaDeRedacaoSchema) });
+
+export const enviarRedacaoEntradaSchema = z.object({
+  temaId: identificadorSchema,
+  texto: z.string().min(1, 'Escreva alguma coisa antes de enviar.').max(20_000),
+});
+
+export const redacaoSaidaSchema = z.object({
+  id: identificadorSchema,
+  texto: z.string().optional(),
+  tamanho: tamanhoSchema,
+  apontamentos: z.array(apontamentoSchema),
+  resumo: z.string().nullable(),
+  analisadaPorIa: z.boolean(),
+  parecer: z.string().nullable().optional(),
+  nota: z.number().int().nullable().optional(),
+  corrigida: z.boolean().optional(),
+});
+
+export const criarTemaEntradaSchema = z.object({
+  titulo: z.string().trim().min(3, 'Dê um título ao tema.').max(160),
+  enunciado: z.string().trim().min(10, 'Explique o que o aluno deve escrever.').max(2000),
+  nivel: nivelSchema,
+});
+
+export const filaDeRedacoesSaidaSchema = z.object({
+  redacoes: z.array(
+    z.object({
+      id: identificadorSchema,
+      alunoId: identificadorSchema,
+      nome: z.string(),
+      tema: z.string(),
+      palavras: z.number().int().min(0),
+      corrigida: z.boolean(),
+    }),
+  ),
+});
+
+export const corrigirEntradaSchema = z.object({
+  parecer: z.string().trim().min(1, 'Escreva o parecer.').max(4000),
+  nota: z.number().int().min(0).max(10).nullable(),
+});
+
 /** --------------------------------------------------------- pontuação */
 
 export const ofensivaSchema = z.object({
@@ -320,6 +398,14 @@ export const erroSchema = z.object({
 });
 
 export type MinhasTurmasSaida = z.infer<typeof minhasTurmasSaidaSchema>;
+export type Apontamento = z.infer<typeof apontamentoSchema>;
+export type TemaDeRedacao = z.infer<typeof temaDeRedacaoSchema>;
+export type TemasSaida = z.infer<typeof temasSaidaSchema>;
+export type EnviarRedacaoEntrada = z.infer<typeof enviarRedacaoEntradaSchema>;
+export type RedacaoSaida = z.infer<typeof redacaoSaidaSchema>;
+export type CriarTemaEntrada = z.infer<typeof criarTemaEntradaSchema>;
+export type FilaDeRedacoesSaida = z.infer<typeof filaDeRedacoesSaidaSchema>;
+export type CorrigirEntrada = z.infer<typeof corrigirEntradaSchema>;
 export type Ofensiva = z.infer<typeof ofensivaSchema>;
 export type PontuacaoSaida = z.infer<typeof pontuacaoSaidaSchema>;
 export type RankingSaida = z.infer<typeof rankingSaidaSchema>;

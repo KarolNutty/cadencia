@@ -1446,3 +1446,137 @@ ul {
   color: var(--violeta);
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   Redação
+   ========================================================================== */
+
+.escrita__rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.texto-do-aluno {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: var(--tinta);
+}
+
+.apontamentos {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+}
+
+.apontamento {
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.apontamento__criterio {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  padding: 4px 9px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+/*
+ * O erro e a correção lado a lado.
+ *
+ * Mostrar só a forma certa não ensina: o aluno precisa reconhecer o que ele
+ * escreveu para lembrar na próxima vez.
+ */
+.apontamento__troca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.apontamento__antes {
+  color: var(--coral-escuro);
+  background: var(--coral-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.apontamento__seta {
+  color: var(--tinta-fraca);
+}
+
+.apontamento__depois {
+  color: var(--menta-escuro);
+  background: var(--menta-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+}
+
+.apontamento__explicacao {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+/* As observações não localizadas ficam recolhidas, mas acessíveis. */
+.duvidosos {
+  max-width: 680px;
+  margin-top: 20px;
+}
+
+.duvidosos summary {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.duvidosos summary:hover {
+  color: var(--tinta-media);
+}
+
+.parecer {
+  max-width: 680px;
+  background: var(--violeta-claro);
+  border: 2px solid var(--violeta);
+  border-radius: var(--canto-grande);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.parecer__texto {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.parecer__nota {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--violeta);
+  margin-top: 12px;
+}

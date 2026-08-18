@@ -9,7 +9,9 @@ import { TelaTurmas } from '@/app/turmas';
 import { TelaEstudar } from '@/app/estudar';
 import { TelaNivelamento } from '@/app/nivelamento';
 import { TelaProgresso } from '@/app/progresso';
+import { TelaCorrecoes } from '@/app/correcoes';
 import { TelaRanking } from '@/app/ranking';
+import { TelaRedacao } from '@/app/redacao';
 import { PainelDoAluno } from '@/app/aluno';
 import { useSessao } from '@/providers/sessao';
 
@@ -42,16 +44,20 @@ export function App() {
           progresso: <TelaProgresso />,
           nivelamento: <TelaNivelamento />,
           ranking: <TelaRanking />,
+          correcoes: <TelaCorrecoes />,
+          redacao: <TelaRedacao />,
         }
       : {
           estudar: <TelaEstudar />,
           progresso: <TelaProgresso />,
           nivelamento: <TelaNivelamento />,
           ranking: <TelaRanking />,
+          redacao: <TelaRedacao />,
           aula: <TelaEstudar />,
           alunos: <TelaEstudar />,
           palavras: <TelaEstudar />,
           turmas: <TelaEstudar />,
+          correcoes: <TelaRedacao />,
         };
 
   return (

@@ -67,6 +67,16 @@ const ambienteSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORTA: z.coerce.number().int().min(1).max(65_535).default(3333),
 
+  /**
+   * Chave do Gemini, para a correção de redação.
+   *
+   * Opcional de propósito: sem ela, a correção usa o provedor simulado e o
+   * projeto roda por completo. Exigir a chave transformaria "clonar e rodar" em
+   * "clonar, criar conta no Google, gerar chave, e então rodar" — e a maioria
+   * das pessoas desiste no segundo passo.
+   */
+  GEMINI_API_KEY: z.string().min(20).optional(),
+
   /** String de conexão completa. Nunca usuário e senha em variáveis separadas. */
   DATABASE_URL: z
     .string()
