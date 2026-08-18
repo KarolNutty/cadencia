@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
-import { ProvedorDeSessao } from './compartilhado/sessao';
+import { App } from '@/app/App';
+import { ProvedorDeSessao } from '@/providers/sessao';
 import './estilos.css';
 
 const consultas = new QueryClient({

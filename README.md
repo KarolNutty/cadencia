@@ -192,6 +192,28 @@ O padrão dos quatro é o mesmo, e é a lição que eu levo do projeto:
 
 ---
 
+## O que o pipeline barra
+
+Roda a cada push e pull request, e **impede o merge** em qualquer destes casos:
+
+| Barra quando                                    | Passo                      |
+| ----------------------------------------------- | -------------------------- |
+| Um tipo não fecha em qualquer dos três projetos | `typecheck`                |
+| Qualquer regra de lint quebra, inclusive aviso  | `lint --max-warnings 0`    |
+| Um arquivo sai do padrão de formatação          | `format:check`             |
+| Um teste falha, com ou sem banco                | `test` e `test:integracao` |
+| O painel não compila                            | `build:web`                |
+| Um segredo aparece no código ou no histórico    | `gitleaks`                 |
+| Há vulnerabilidade alta ou crítica              | `npm audit`                |
+
+O Postgres sobe como serviço do próprio job. Sem isso, os testes que provam a
+autorização por recurso, a rotação de token e o tratamento de injeção não
+rodariam — e um pull request que quebrasse qualquer um deles passaria verde.
+**Teste que só roda na máquina de quem escreveu não protege nada.**
+
+O `gitleaks` varre o histórico completo, e não só o último commit: segredo que
+já entrou no passado não sai com um commit de remoção.
+
 ## Documentos
 
 - [`docs/arquitetura.md`](docs/arquitetura.md) — organização por funcionalidade e o que fica compartilhado

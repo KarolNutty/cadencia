@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CartasSinalizadasSaida, TurmaDoProfessor } from '@cadencia/contrato';
 import { diaDeEstudoDe } from '@cadencia/dominio';
-import { Cabecalho, useTurma } from '../../compartilhado/Estrutura';
-import { useSessao } from '../../compartilhado/sessao';
-import { destravarPalavra } from '../gestao/api';
-import { desdeQuando } from './leitura';
+import { Cabecalho, useTurma } from '@/components/Estrutura';
+import { useSessao } from '@/providers/sessao';
+import { destravarPalavra } from '@/lib/api';
+import { desdeQuando } from '@/lib/leitura';
 
 /**
  * O que travou para um aluno específico.

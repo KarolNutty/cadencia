@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import type {
-  MinhasTurmasSaida,
-  PalavrasTravadasSaida,
-  TurmaDoProfessor,
-} from '@cadencia/contrato';
+import type { PalavrasTravadasSaida, TurmaDoProfessor } from '@cadencia/contrato';
 import { diaDeEstudoDe } from '@cadencia/dominio';
-import { useSessao } from '../../compartilhado/sessao';
-import { PainelDoAluno } from './PainelDoAluno';
-import { desdeQuando, ordenarPorPrioridade, situacaoDo, type Situacao } from './leitura';
+import { Cabecalho, useTurma } from '@/components/Estrutura';
+import { useSessao } from '@/providers/sessao';
+import {
+  desdeQuando,
+  ordenarPorPrioridade,
+  situacaoDo,
+  type Situacao,
+} from '@/lib/leitura';
 
 export type Aluno = TurmaDoProfessor['alunos'][number];
 type Palavra = PalavrasTravadasSaida['palavras'][number];
@@ -23,18 +23,11 @@ const ROTULO: Record<Situacao, string> = {
 /** A partir de quantos alunos a palavra vira assunto da turma inteira. */
 const MUITOS_ALUNOS = 3;
 
-export function TelaTurma() {
-  const { usuario, cliente, sair } = useSessao();
-  const [alunoAberto, setAlunoAberto] = useState<Aluno | null>(null);
+export function TelaAula({ aoAbrirAluno }: { aoAbrirAluno: (alunoId: string) => void }) {
+  const { cliente } = useSessao();
+  const { turma } = useTurma();
 
   const hoje = diaDeEstudoDe(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
-
-  const turmas = useQuery({
-    queryKey: ['turmas'],
-    queryFn: () => cliente.chamar<MinhasTurmasSaida>('/turmas'),
-  });
-
-  const turma = turmas.data?.turmas[0] ?? null;
 
   const palavras = useQuery({
     queryKey: ['palavras', turma?.id],
@@ -49,40 +42,14 @@ export function TelaTurma() {
     enabled: Boolean(turma),
   });
 
-  if (alunoAberto && turma) {
-    return (
-      <PainelDoAluno
-        turmaId={turma.id}
-        aluno={alunoAberto}
-        aoVoltar={() => setAlunoAberto(null)}
-      />
-    );
-  }
-
   const lista = palavras.data?.palavras ?? [];
   const alunos = painel.data?.alunos ?? [];
 
   return (
     <>
-      <header className="topo">
-        <div className="faixa topo__conteudo">
-          <div>
-            <h1 className="topo__turma">{turma?.nome ?? 'Cadência'}</h1>
-            <p className="topo__quem">{usuario?.nome}</p>
-          </div>
-          <button className="discreto" onClick={() => void sair()}>
-            Sair
-          </button>
-        </div>
-      </header>
+      <Cabecalho olho="Para a próxima aula" titulo={titulo(lista)} nota={nota(lista)} />
 
-      <div className="faixa abertura">
-        <p className="olho">Para a próxima aula</p>
-        <h2 className="abertura__titulo">{titulo(lista)}</h2>
-        <p className="abertura__nota">{nota(lista)}</p>
-      </div>
-
-      <div className="faixa colunas">
+      <div className="duas-colunas">
         <main>
           {palavras.isPending && <p className="aviso">Procurando o que travou…</p>}
 
@@ -100,7 +67,7 @@ export function TelaTurma() {
             </p>
           )}
 
-          <ul className="verbetes">
+          <ul className="verbetes" aria-label="Palavras travadas da turma">
             {lista.map((palavra, ordem) => (
               <Verbete key={palavra.cartao.id} palavra={palavra} ordem={ordem} />
             ))}
@@ -116,16 +83,19 @@ export function TelaTurma() {
             <p className="aviso">Ninguém matriculado ainda.</p>
           )}
 
-          <ul className="turma">
+          <ul className="turma" aria-label="Alunos da turma">
             {ordenarPorPrioridade(alunos, hoje).map((aluno) => {
               const situacao = situacaoDo(aluno, hoje);
 
               return (
                 <li className="turma__aluno" key={aluno.usuario.id}>
-                  <button className="turma__nome" onClick={() => setAlunoAberto(aluno)}>
+                  <button
+                    className="turma__nome"
+                    onClick={() => aoAbrirAluno(aluno.usuario.id)}
+                  >
                     {aluno.usuario.nome}
                     <br />
-                    <span className="verbete__contagem">
+                    <span className="turma__quando">
                       {desdeQuando(aluno.ultimoEstudo, hoje)}
                     </span>
                   </button>
@@ -155,12 +125,7 @@ function Verbete({ palavra, ordem }: { palavra: Palavra; ordem: number }) {
   return (
     <li
       className={`verbete${critico ? ' verbete--critico' : ''}`}
-      style={
-        {
-          '--ordem': ordem,
-          '--espinha': `${Math.min(2 + palavra.alunos * 3, 14)}px`,
-        } as React.CSSProperties
-      }
+      style={{ '--ordem': ordem } as React.CSSProperties}
     >
       <p className="verbete__palavra">{palavra.cartao.frente}</p>
       <p className="verbete__traducao">{palavra.cartao.verso}</p>

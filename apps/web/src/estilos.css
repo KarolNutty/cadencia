@@ -714,38 +714,254 @@ ul {
 }
 
 /* ==========================================================================
-   Entrada
+   Portal de entrada — o painel que desliza
    ========================================================================== */
 
-.entrada {
+.portal {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
-  background: var(--fundo);
+  background: linear-gradient(135deg, #ede9ff 0%, var(--fundo) 55%, #e4f6ef 100%);
 }
 
-.entrada__forma {
+.portal__caixa {
+  position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 1000px;
+  min-height: 620px;
   background: var(--branco);
   border: 2px solid var(--borda);
-  border-radius: 26px;
-  padding: 34px 30px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(27, 27, 50, 0.1);
 }
 
-.entrada__marca {
-  font-size: 40px;
+/* Os dois formulários ocupam metade e ficam sempre montados: trocar de lado
+   não pode apagar o que a pessoa já digitou no outro. */
+.portal__forma {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: grid;
+  align-content: center;
+  padding: 44px 46px;
+  transition: opacity 320ms ease-in-out;
+}
+
+.portal__forma--entrar {
+  left: 0;
+  z-index: 2;
+  opacity: 1;
+}
+
+.portal__forma--criar {
+  left: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.portal__caixa--criando .portal__forma--entrar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.portal__caixa--criando .portal__forma--criar {
+  z-index: 3;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(100%);
+}
+
+.portal__caixa--criando .portal__forma--entrar {
+  transform: translateX(100%);
+}
+
+/* A capa colorida cobre uma metade e escorrega para a outra. */
+.portal__capa {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 10;
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+  border-radius: 120px 0 0 120px;
+}
+
+.portal__caixa--criando .portal__capa {
+  transform: translateX(-100%);
+  border-radius: 0 120px 120px 0;
+}
+
+/*
+ * O painel interno tem o dobro da largura da capa e carrega os dois lados.
+ *
+ * Ele é filho da capa, então **anda junto com ela**. Para o lado certo
+ * continuar visível depois do deslize, ele precisa de um contra-deslocamento
+ * exatamente igual e contrário: a capa anda -100% da largura dela, e o interno
+ * anda +50% da própria (que é a mesma distância, já que ele é o dobro).
+ *
+ * Sem isso os dois lados aparecem cortados no meio, e o texto sai pela borda.
+ */
+.portal__capa-interna {
+  position: relative;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--violeta) 0%, #8f6bff 48%, var(--menta) 130%);
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+  transform: translateX(0);
+}
+
+.portal__caixa--criando .portal__capa-interna {
+  transform: translateX(50%);
+}
+
+.portal__lado {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 14px;
+  padding: 0 44px;
+  color: var(--branco);
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+}
+
+.portal__lado--esquerdo {
+  left: 0;
+  /* Entra deslocado e assenta quando é a vez dele: o conteúdo acompanha o
+     movimento em vez de aparecer pronto no fim da animação. */
+  transform: translateX(-16%);
+}
+
+.portal__caixa--criando .portal__lado--esquerdo {
+  transform: translateX(0);
+}
+
+.portal__lado--direito {
+  right: 0;
+  transform: translateX(0);
+}
+
+.portal__caixa--criando .portal__lado--direito {
+  transform: translateX(16%);
+}
+
+.portal__titulo {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.portal__texto {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+  opacity: 0.92;
+  max-width: 30ch;
+}
+
+.botao--vazado {
+  width: auto;
+  margin-top: 8px;
+  background: transparent;
+  color: var(--branco);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.35);
+}
+
+.botao--vazado:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  filter: none;
+}
+
+.botao--vazado:active:not(:disabled) {
+  box-shadow: 0 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.portal__marca {
+  font-size: 34px;
   font-weight: 900;
   letter-spacing: -0.03em;
   color: var(--violeta);
 }
 
-.entrada__nota {
+.portal__abertura {
   font-size: 15px;
   font-weight: 700;
   color: var(--tinta-media);
-  margin: 4px 0 28px;
+  margin: 2px 0 24px;
+}
+
+.campo__apoio {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+  margin-top: 6px;
+}
+
+/* O botão de troca só existe quando a capa não cabe. */
+.portal__troca {
+  display: none;
+  margin-top: 18px;
+  background: none;
+  border: none;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--violeta);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/*
+ * Em tela estreita a capa some.
+ *
+ * Cobrir metade de um celular deixaria o formulário sem espaço para respirar —
+ * a animação é bonita numa tela larga e atrapalha numa estreita.
+ */
+@media (max-width: 780px) {
+  .portal__caixa {
+    min-height: 0;
+    max-width: 420px;
+  }
+
+  .portal__capa {
+    display: none;
+  }
+
+  .portal__forma {
+    position: static;
+    width: 100%;
+    padding: 34px 28px;
+  }
+
+  .portal__forma--criar,
+  .portal__caixa--criando .portal__forma--entrar {
+    display: none;
+  }
+
+  .portal__caixa--criando .portal__forma--criar,
+  .portal__caixa--criando .portal__forma--entrar {
+    transform: none;
+  }
+
+  .portal__caixa--criando .portal__forma--criar {
+    display: grid;
+  }
+
+  .portal__troca {
+    display: block;
+  }
 }
 
 /* ==========================================================================
@@ -773,6 +989,12 @@ ul {
     animation: none;
   }
   .botao {
+    transition: none;
+  }
+  .portal__capa,
+  .portal__capa-interna,
+  .portal__lado,
+  .portal__forma {
     transition: none;
   }
 }
@@ -877,4 +1099,255 @@ ul {
 .escolha__opcao--escolhida {
   color: var(--violeta);
   font-weight: 800;
+}
+
+/* ==========================================================================
+   Área do aluno
+   ========================================================================== */
+
+.estudo {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 620px;
+}
+
+.estudo__topo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * As batidas: uma marca por carta.
+ *
+ * Uma barra contínua diz "falta mais ou menos isso". As marcas dizem exatamente
+ * quantas faltam — e são mais altas que largas, senão viram linha pontilhada e
+ * deixam de parecer marcação de compasso.
+ */
+.batidas {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 16px;
+}
+
+.batida {
+  flex: 0 0 4px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--borda-forte);
+  transition:
+    height 160ms,
+    background 160ms;
+}
+
+.batida--feita {
+  height: 16px;
+  background: var(--violeta);
+}
+
+.estudo__medidas {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+}
+
+/* A carta ocupa o centro e o resto recua: um produto de idioma cuja tela é
+   dominada por botões ensina a olhar para os botões. */
+.carta {
+  width: 100%;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 40px 28px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto-grande);
+  text-align: center;
+}
+
+.carta:not(:disabled):hover {
+  border-color: var(--violeta);
+}
+
+.carta__palavra {
+  font-size: clamp(30px, 6vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.carta__verso {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--violeta);
+  padding-top: 18px;
+  border-top: 2px solid var(--borda);
+}
+
+.carta__dica {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+}
+
+.avaliacoes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .avaliacoes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.avaliacao {
+  padding: 15px 8px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--branco);
+  border: none;
+  border-radius: var(--canto);
+  transition:
+    transform 60ms,
+    box-shadow 60ms;
+}
+
+.avaliacao:active {
+  transform: translateY(4px);
+  box-shadow: none !important;
+}
+
+.avaliacao--errei {
+  background: var(--coral);
+  box-shadow: 0 4px 0 var(--coral-escuro);
+}
+.avaliacao--dificil {
+  background: var(--ambar);
+  box-shadow: 0 4px 0 var(--ambar-escuro);
+}
+.avaliacao--bom {
+  background: var(--azul);
+  box-shadow: 0 4px 0 #1d63c9;
+}
+.avaliacao--facil {
+  background: var(--menta);
+  box-shadow: 0 4px 0 var(--menta-escuro);
+}
+
+/* --------------------------------------------------------------- fichas */
+
+.fichas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.ficha {
+  flex: 1;
+  min-width: 130px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.ficha--destaque {
+  background: var(--violeta-claro);
+  border-color: var(--violeta);
+}
+
+.ficha__valor {
+  display: block;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.ficha--destaque .ficha__valor {
+  color: var(--violeta);
+}
+
+.ficha__rotulo {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------- nivelamento */
+
+.enunciado {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.alternativas {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alternativa {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 15.5px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+}
+
+.alternativa:hover:not(:disabled) {
+  border-color: var(--violeta);
+  background: var(--violeta-claro);
+}
+
+.alternativa__letra {
+  flex: 0 0 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  border-radius: 8px;
+}
+
+/* ----------------------------------------------------------- progresso */
+
+.barra {
+  height: 14px;
+  background: var(--fundo);
+  border: 2px solid var(--borda);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra__cheia {
+  height: 100%;
+  background: var(--menta);
+  border-radius: 999px;
+  transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }

@@ -3,15 +3,15 @@ import { useState } from 'react';
 import type { MatricularSaida, TurmaDoProfessor } from '@cadencia/contrato';
 import { diaDeEstudoDe } from '@cadencia/dominio';
 import { FalhaDaApi } from '@cadencia/cliente-api';
-import { Cabecalho, useTurma } from '../../compartilhado/Estrutura';
-import { useSessao } from '../../compartilhado/sessao';
+import { Cabecalho, useTurma } from '@/components/Estrutura';
+import { useSessao } from '@/providers/sessao';
 import {
   desdeQuando,
   ordenarPorPrioridade,
   situacaoDo,
   type Situacao,
-} from '../turma/leitura';
-import { desmatricular, matricular } from './api';
+} from '@/lib/leitura';
+import { desmatricular, matricular } from '@/lib/api';
 
 const ROTULO: Record<Situacao, string> = {
   travado: 'travado',
