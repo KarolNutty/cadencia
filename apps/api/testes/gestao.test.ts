@@ -360,6 +360,131 @@ describe('matrícula', () => {
   });
 });
 
+describe('cadastro e convite', () => {
+  it('quem se cadastra com e-mail convidado entra na turma na hora', async () => {
+    // Sem isto o convite ficaria guardado para sempre, e o professor teria de
+    // convidar de novo — sem saber que precisa.
+    const { acesso } = await professor();
+    const turmaId = await criarTurma(acesso);
+
+    await app.inject({
+      method: 'POST',
+      url: `/turmas/${turmaId}/matriculas`,
+      headers: comToken(acesso),
+      payload: { email: 'nova@escola.com.br' },
+    });
+
+    const cadastro = await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      headers: { 'x-plataforma': 'mobile' },
+      payload: {
+        nome: 'Nova Aluna',
+        email: 'nova@escola.com.br',
+        senha: 'uma-senha-bem-comprida',
+      },
+    });
+
+    expect(cadastro.statusCode).toBe(201);
+    expect(cadastro.json().turmasQueEntrou).toBe(1);
+
+    const turmas = await app.inject({
+      method: 'GET',
+      url: '/turmas',
+      headers: comToken(cadastro.json().acesso),
+    });
+
+    expect(turmas.json().turmas[0].id).toBe(turmaId);
+  });
+
+  it('quem se cadastra sem convite entra sem turma', async () => {
+    const cadastro = await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      headers: { 'x-plataforma': 'mobile' },
+      payload: {
+        nome: 'Sem Convite',
+        email: 'sozinho@escola.com.br',
+        senha: 'uma-senha-bem-comprida',
+      },
+    });
+
+    expect(cadastro.json().turmasQueEntrou).toBe(0);
+  });
+
+  it('quem se cadastra é sempre aluno, mesmo pedindo outro papel', async () => {
+    // Aceitar o papel na entrada deixaria qualquer pessoa se declarar professor
+    // e ver a turma inteira.
+    const cadastro = await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      headers: { 'x-plataforma': 'mobile' },
+      payload: {
+        nome: 'Esperto',
+        email: 'esperto@escola.com.br',
+        senha: 'uma-senha-bem-comprida',
+        papel: 'professor',
+      },
+    });
+
+    expect(cadastro.json().usuario.papel).toBe('aluno');
+  });
+
+  it('recusa e-mail já cadastrado', async () => {
+    await criarUsuario(sql, { papel: 'aluno', email: 'ana@escola.com.br' });
+
+    const cadastro = await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      payload: {
+        nome: 'Ana Outra',
+        email: 'ana@escola.com.br',
+        senha: 'uma-senha-bem-comprida',
+      },
+    });
+
+    expect(cadastro.statusCode).toBe(409);
+  });
+
+  it('recusa senha curta antes de tocar no banco', async () => {
+    const cadastro = await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      payload: { nome: 'Curta', email: 'curta@escola.com.br', senha: 'curta123' },
+    });
+
+    expect(cadastro.statusCode).toBe(400);
+
+    const usuarios = await sql`SELECT 1 FROM usuarios WHERE email = 'curta@escola.com.br'`;
+    expect(usuarios).toHaveLength(0);
+  });
+
+  it('o convite é marcado como aceito e não vale duas vezes', async () => {
+    const { acesso } = await professor();
+    const turmaId = await criarTurma(acesso);
+
+    await app.inject({
+      method: 'POST',
+      url: `/turmas/${turmaId}/matriculas`,
+      headers: comToken(acesso),
+      payload: { email: 'nova@escola.com.br' },
+    });
+
+    await app.inject({
+      method: 'POST',
+      url: '/usuarios',
+      payload: {
+        nome: 'Nova Aluna',
+        email: 'nova@escola.com.br',
+        senha: 'uma-senha-bem-comprida',
+      },
+    });
+
+    const pendentes = await sql`SELECT 1 FROM convites WHERE aceito_em IS NULL`;
+    expect(pendentes).toHaveLength(0);
+  });
+});
+
 describe('baralhos e palavras', () => {
   it('cria baralho e lista com a contagem de palavras', async () => {
     const { acesso } = await professor();

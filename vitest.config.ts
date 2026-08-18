@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 const alias = {
+  // O painel importa por `@/`; sem isto os testes de componente não resolvem.
+  '@': resolve(__dirname, 'apps/web/src'),
   '@cadencia/cliente-api': resolve(__dirname, 'packages/cliente-api/src/index.ts'),
   '@cadencia/config': resolve(__dirname, 'packages/config/src/index.ts'),
   '@cadencia/contrato': resolve(__dirname, 'packages/contrato/src/index.ts'),

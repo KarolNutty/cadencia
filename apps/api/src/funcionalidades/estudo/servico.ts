@@ -6,12 +6,14 @@ import {
   agendar,
   diaDeEstudoDe,
   diasEntre,
+  xpDoDia,
   montarSessao,
   resumirAluno,
   sequenciaDeDias,
 } from '@cadencia/dominio';
 import { ErroDaApi, naoEncontrado } from '../../compartilhado/erros';
 import type { Banco } from '../../infra/banco';
+import { criarServicoDePontuacao } from '../pontuacao/servico';
 import { criarRepositorioDeEstudo } from './repositorio';
 
 export interface RevisaoRecebida {
@@ -53,6 +55,7 @@ function conferirDia(dia: DiaDeEstudo, hojeNoServidor: DiaDeEstudo): void {
 
 export function criarServicoDeEstudo(sql: Banco) {
   const repositorio = criarRepositorioDeEstudo(sql);
+  const pontuacao = criarServicoDePontuacao(sql);
 
   /**
    * Confere a matrícula e responde 404 quando não há.
@@ -238,6 +241,14 @@ export function criarServicoDeEstudo(sql: Banco) {
 
         const agendamentos: ResultadoDoEnvio['agendamentos'] = [];
 
+        /*
+         * O XP é apurado aqui dentro, a partir do agendamento que **estava**
+         * gravado antes de cada revisão. O cliente não informa quanto ganhou:
+         * se informasse, bastaria abrir o console do navegador para liderar o
+         * ranking da turma.
+         */
+        const pontuaveis: { avaliacao: Avaliacao; agendamentoAnterior: Agendamento }[] = [];
+
         // Em ordem cronológica: o agendamento de cada revisão depende do estado
         // deixado pela anterior. Fora de ordem, o resultado seria outro.
         const emOrdem = [...revisoes].sort((a, b) => a.dia.localeCompare(b.dia));
@@ -258,7 +269,26 @@ export function criarServicoDeEstudo(sql: Banco) {
 
           await dentro.salvarAgendamento(alunoId, revisao.cartaoId, novo);
           agendamentos.push({ cartaoId: revisao.cartaoId, agendamento: novo });
+          pontuaveis.push({ avaliacao: revisao.avaliacao, agendamentoAnterior: atual });
         }
+
+        // O crédito acontece na mesma transação das revisões: fora dela, um
+        // processo que caísse no meio deixaria o histórico gravado e a
+        // pontuação perdida.
+        const jaGanhou = await pontuacao.xpDeHoje(
+          transacao,
+          alunoId,
+          turmaId,
+          hojeNoServidor,
+        );
+
+        await pontuacao.creditar(
+          transacao,
+          alunoId,
+          turmaId,
+          hojeNoServidor,
+          xpDoDia(pontuaveis, hojeNoServidor, jaGanhou),
+        );
 
         return { agendamentos, jaProcessado: false };
       }) as Promise<ResultadoDoEnvio>;

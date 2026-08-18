@@ -14,6 +14,16 @@ import { registrarRotasDeEstudo } from './funcionalidades/estudo/rotas';
 import { criarServicoDeEstudo } from './funcionalidades/estudo/servico';
 import { registrarRotasDeGestao } from './funcionalidades/gestao/rotas';
 import { criarServicoDeGestao } from './funcionalidades/gestao/servico';
+import { registrarRotasDeNivelamento } from './funcionalidades/nivelamento/rotas';
+import { criarServicoDeNivelamento } from './funcionalidades/nivelamento/servico';
+import { registrarRotasDePontuacao } from './funcionalidades/pontuacao/rotas';
+import { criarServicoDePontuacao } from './funcionalidades/pontuacao/servico';
+import { escolherProvedor as escolherParceiro } from './funcionalidades/conversa/provedor';
+import { registrarRotasDeConversa } from './funcionalidades/conversa/rotas';
+import { criarServicoDeConversa } from './funcionalidades/conversa/servico';
+import { escolherProvedor } from './funcionalidades/redacao/provedor';
+import { registrarRotasDeRedacao } from './funcionalidades/redacao/rotas';
+import { criarServicoDeRedacao } from './funcionalidades/redacao/servico';
 import { criarEmissor } from './funcionalidades/autenticacao/tokens';
 
 export interface OpcoesDoServidor {
@@ -141,6 +151,18 @@ export async function construirServidor({
   await registrarRotasDeAutenticacao(app, { autenticacao, producao: ambiente.producao });
   await registrarRotasDeEstudo(app, { estudo: criarServicoDeEstudo(sql) });
   await registrarRotasDeGestao(app, { gestao: criarServicoDeGestao(sql) });
+  await registrarRotasDeNivelamento(app, {
+    nivelamento: criarServicoDeNivelamento(sql),
+  });
+  await registrarRotasDePontuacao(app, { pontuacao: criarServicoDePontuacao(sql) });
+  await registrarRotasDeRedacao(app, {
+    // Sem chave, o provedor simulado assume: o projeto roda por completo sem
+    // credencial, e quem clona vê a correção funcionando.
+    redacao: criarServicoDeRedacao(sql, escolherProvedor(ambiente.GEMINI_API_KEY)),
+  });
+  await registrarRotasDeConversa(app, {
+    conversa: criarServicoDeConversa(sql, escolherParceiro(ambiente.GEMINI_API_KEY)),
+  });
 
   return { app, sql };
 }

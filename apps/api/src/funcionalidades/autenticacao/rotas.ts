@@ -1,10 +1,12 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import {
   type EntrarSaida,
+  cadastrarEntradaSchema,
   entrarEntradaSchema,
   plataformaSchema,
 } from '@cadencia/contrato';
 import { naoAutenticado } from '../../compartilhado/erros';
+import { porEnderecoEConta } from '../../compartilhado/limite';
 import { VIDA_DA_RENOVACAO_EM_SEGUNDOS, VIDA_DO_ACESSO_EM_SEGUNDOS } from './tokens';
 import type { ServicoDeAutenticacao, SessaoCriada } from './servico';
 
@@ -82,18 +84,14 @@ export async function registrarRotasDeAutenticacao(
         rateLimit: {
           max: 5,
           timeWindow: '1 minute',
-          /**
-           * A chave junta IP **e** e-mail.
+          /*
+           * A chave junta endereço e e-mail tentado.
            *
            * Só por IP não segura ataque distribuído, que troca de endereço a
            * cada tentativa. Só por conta permite varrer muitas contas com uma
            * tentativa em cada. Juntando, os dois caminhos ficam caros.
            */
-          keyGenerator: (requisicao) => {
-            const corpo = requisicao.body as { email?: unknown } | undefined;
-            const email = typeof corpo?.email === 'string' ? corpo.email.toLowerCase() : '';
-            return `${requisicao.ip}:${email}`;
-          },
+          keyGenerator: porEnderecoEConta('email'),
         },
       },
     },
@@ -108,6 +106,28 @@ export async function registrarRotasDeAutenticacao(
       return resposta
         .status(201)
         .send(entregarSessao(resposta, sessao, plataforma, producao));
+    },
+  );
+
+  app.post(
+    '/usuarios',
+    {
+      config: {
+        // Mais folgado que o login: cadastro legítimo é raro, mas errar o
+        // formulário três vezes seguidas é comum.
+        rateLimit: { max: 8, timeWindow: '10 minutes' },
+      },
+    },
+    async (requisicao, resposta) => {
+      const entrada = cadastrarEntradaSchema.parse(requisicao.body);
+      const plataforma = lerPlataforma(requisicao.headers['x-plataforma']);
+
+      const sessao = await autenticacao.cadastrar(entrada, { ip: requisicao.ip });
+
+      return resposta.status(201).send({
+        ...entregarSessao(resposta, sessao, plataforma, producao),
+        turmasQueEntrou: sessao.turmasQueEntrou,
+      });
     },
   );
 
