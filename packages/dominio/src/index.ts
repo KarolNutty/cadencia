@@ -24,6 +24,68 @@ export {
 } from './agendamento';
 
 export {
+  type Autor,
+  type CorrecaoNaFala,
+  type EstadoDaConversa,
+  type Fala,
+  type RespostaDaConversa,
+  FALAS_NA_JANELA,
+  MAXIMO_DA_MENSAGEM,
+  MAXIMO_DE_FALAS,
+  REGISTRO_POR_NIVEL,
+  correcoesValidas,
+  falasRestantes,
+  janelaDeContexto,
+  podeContinuar,
+} from './conversa';
+
+export {
+  type AnaliseDaIa,
+  type ApontamentoDaIa,
+  type ApontamentoVerificado,
+  type AvaliacaoDeTamanho,
+  type Criterio,
+  CRITERIOS,
+  MAXIMO_DE_PALAVRAS,
+  NOME_DO_CRITERIO,
+  TAMANHO_ESPERADO,
+  avaliarTamanho,
+  contarPalavras,
+  contarPorCriterio,
+  verificarAnalise,
+} from './redacao';
+
+export {
+  type LinhaDoRanking,
+  type Ofensiva,
+  type PosicaoNoRanking,
+  type RevisaoPontuavel,
+  TETO_DIARIO_DE_XP,
+  calcularOfensiva,
+  nivelDeXp,
+  ordenarRanking,
+  xpDaRevisao,
+  xpDoDia,
+} from './pontuacao';
+
+export {
+  type EstadoDoTeste,
+  type Nivel,
+  type Pergunta,
+  type Resposta,
+  type ResultadoDoTeste,
+  MAXIMO_DE_PERGUNTAS,
+  MINIMO_DE_PERGUNTAS,
+  NIVEIS,
+  NIVEL_INICIAL,
+  iniciarTeste,
+  proximaPergunta,
+  responder,
+  resultado,
+  terminou,
+} from './nivelamento';
+
+export {
   type PalavraImportada,
   type ProblemaNaLinha,
   type ResultadoDaImportacao,

@@ -714,38 +714,254 @@ ul {
 }
 
 /* ==========================================================================
-   Entrada
+   Portal de entrada — o painel que desliza
    ========================================================================== */
 
-.entrada {
+.portal {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
-  background: var(--fundo);
+  background: linear-gradient(135deg, #ede9ff 0%, var(--fundo) 55%, #e4f6ef 100%);
 }
 
-.entrada__forma {
+.portal__caixa {
+  position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 1000px;
+  min-height: 620px;
   background: var(--branco);
   border: 2px solid var(--borda);
-  border-radius: 26px;
-  padding: 34px 30px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(27, 27, 50, 0.1);
 }
 
-.entrada__marca {
-  font-size: 40px;
+/* Os dois formulários ocupam metade e ficam sempre montados: trocar de lado
+   não pode apagar o que a pessoa já digitou no outro. */
+.portal__forma {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  display: grid;
+  align-content: center;
+  padding: 44px 46px;
+  transition: opacity 320ms ease-in-out;
+}
+
+.portal__forma--entrar {
+  left: 0;
+  z-index: 2;
+  opacity: 1;
+}
+
+.portal__forma--criar {
+  left: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.portal__caixa--criando .portal__forma--entrar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.portal__caixa--criando .portal__forma--criar {
+  z-index: 3;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(100%);
+}
+
+.portal__caixa--criando .portal__forma--entrar {
+  transform: translateX(100%);
+}
+
+/* A capa colorida cobre uma metade e escorrega para a outra. */
+.portal__capa {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 10;
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+  border-radius: 120px 0 0 120px;
+}
+
+.portal__caixa--criando .portal__capa {
+  transform: translateX(-100%);
+  border-radius: 0 120px 120px 0;
+}
+
+/*
+ * O painel interno tem o dobro da largura da capa e carrega os dois lados.
+ *
+ * Ele é filho da capa, então **anda junto com ela**. Para o lado certo
+ * continuar visível depois do deslize, ele precisa de um contra-deslocamento
+ * exatamente igual e contrário: a capa anda -100% da largura dela, e o interno
+ * anda +50% da própria (que é a mesma distância, já que ele é o dobro).
+ *
+ * Sem isso os dois lados aparecem cortados no meio, e o texto sai pela borda.
+ */
+.portal__capa-interna {
+  position: relative;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--violeta) 0%, #8f6bff 48%, var(--menta) 130%);
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+  transform: translateX(0);
+}
+
+.portal__caixa--criando .portal__capa-interna {
+  transform: translateX(50%);
+}
+
+.portal__lado {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 14px;
+  padding: 0 44px;
+  color: var(--branco);
+  transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
+}
+
+.portal__lado--esquerdo {
+  left: 0;
+  /* Entra deslocado e assenta quando é a vez dele: o conteúdo acompanha o
+     movimento em vez de aparecer pronto no fim da animação. */
+  transform: translateX(-16%);
+}
+
+.portal__caixa--criando .portal__lado--esquerdo {
+  transform: translateX(0);
+}
+
+.portal__lado--direito {
+  right: 0;
+  transform: translateX(0);
+}
+
+.portal__caixa--criando .portal__lado--direito {
+  transform: translateX(16%);
+}
+
+.portal__titulo {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.portal__texto {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.6;
+  opacity: 0.92;
+  max-width: 30ch;
+}
+
+.botao--vazado {
+  width: auto;
+  margin-top: 8px;
+  background: transparent;
+  color: var(--branco);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 0 rgba(255, 255, 255, 0.35);
+}
+
+.botao--vazado:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  filter: none;
+}
+
+.botao--vazado:active:not(:disabled) {
+  box-shadow: 0 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.portal__marca {
+  font-size: 34px;
   font-weight: 900;
   letter-spacing: -0.03em;
   color: var(--violeta);
 }
 
-.entrada__nota {
+.portal__abertura {
   font-size: 15px;
   font-weight: 700;
   color: var(--tinta-media);
-  margin: 4px 0 28px;
+  margin: 2px 0 24px;
+}
+
+.campo__apoio {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+  margin-top: 6px;
+}
+
+/* O botão de troca só existe quando a capa não cabe. */
+.portal__troca {
+  display: none;
+  margin-top: 18px;
+  background: none;
+  border: none;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--violeta);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/*
+ * Em tela estreita a capa some.
+ *
+ * Cobrir metade de um celular deixaria o formulário sem espaço para respirar —
+ * a animação é bonita numa tela larga e atrapalha numa estreita.
+ */
+@media (max-width: 780px) {
+  .portal__caixa {
+    min-height: 0;
+    max-width: 420px;
+  }
+
+  .portal__capa {
+    display: none;
+  }
+
+  .portal__forma {
+    position: static;
+    width: 100%;
+    padding: 34px 28px;
+  }
+
+  .portal__forma--criar,
+  .portal__caixa--criando .portal__forma--entrar {
+    display: none;
+  }
+
+  .portal__caixa--criando .portal__forma--criar,
+  .portal__caixa--criando .portal__forma--entrar {
+    transform: none;
+  }
+
+  .portal__caixa--criando .portal__forma--criar {
+    display: grid;
+  }
+
+  .portal__troca {
+    display: block;
+  }
 }
 
 /* ==========================================================================
@@ -773,6 +989,12 @@ ul {
     animation: none;
   }
   .botao {
+    transition: none;
+  }
+  .portal__capa,
+  .portal__capa-interna,
+  .portal__lado,
+  .portal__forma {
     transition: none;
   }
 }
@@ -877,4 +1099,599 @@ ul {
 .escolha__opcao--escolhida {
   color: var(--violeta);
   font-weight: 800;
+}
+
+/* ==========================================================================
+   Área do aluno
+   ========================================================================== */
+
+.estudo {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 620px;
+}
+
+.estudo__topo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/*
+ * As batidas: uma marca por carta.
+ *
+ * Uma barra contínua diz "falta mais ou menos isso". As marcas dizem exatamente
+ * quantas faltam — e são mais altas que largas, senão viram linha pontilhada e
+ * deixam de parecer marcação de compasso.
+ */
+.batidas {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 16px;
+}
+
+.batida {
+  flex: 0 0 4px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--borda-forte);
+  transition:
+    height 160ms,
+    background 160ms;
+}
+
+.batida--feita {
+  height: 16px;
+  background: var(--violeta);
+}
+
+.estudo__medidas {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+}
+
+/* A carta ocupa o centro e o resto recua: um produto de idioma cuja tela é
+   dominada por botões ensina a olhar para os botões. */
+.carta {
+  width: 100%;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 40px 28px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto-grande);
+  text-align: center;
+}
+
+.carta:not(:disabled):hover {
+  border-color: var(--violeta);
+}
+
+.carta__palavra {
+  font-size: clamp(30px, 6vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.carta__verso {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--violeta);
+  padding-top: 18px;
+  border-top: 2px solid var(--borda);
+}
+
+.carta__dica {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta-fraca);
+}
+
+.avaliacoes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .avaliacoes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.avaliacao {
+  padding: 15px 8px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--branco);
+  border: none;
+  border-radius: var(--canto);
+  transition:
+    transform 60ms,
+    box-shadow 60ms;
+}
+
+.avaliacao:active {
+  transform: translateY(4px);
+  box-shadow: none !important;
+}
+
+.avaliacao--errei {
+  background: var(--coral);
+  box-shadow: 0 4px 0 var(--coral-escuro);
+}
+.avaliacao--dificil {
+  background: var(--ambar);
+  box-shadow: 0 4px 0 var(--ambar-escuro);
+}
+.avaliacao--bom {
+  background: var(--azul);
+  box-shadow: 0 4px 0 #1d63c9;
+}
+.avaliacao--facil {
+  background: var(--menta);
+  box-shadow: 0 4px 0 var(--menta-escuro);
+}
+
+/* --------------------------------------------------------------- fichas */
+
+.fichas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.ficha {
+  flex: 1;
+  min-width: 130px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.ficha--destaque {
+  background: var(--violeta-claro);
+  border-color: var(--violeta);
+}
+
+.ficha__valor {
+  display: block;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.ficha--destaque .ficha__valor {
+  color: var(--violeta);
+}
+
+.ficha__rotulo {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  margin-top: 2px;
+}
+
+/* ---------------------------------------------------------- nivelamento */
+
+.enunciado {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.alternativas {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alternativa {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 15.5px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--tinta);
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+}
+
+.alternativa:hover:not(:disabled) {
+  border-color: var(--violeta);
+  background: var(--violeta-claro);
+}
+
+.alternativa__letra {
+  flex: 0 0 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  border-radius: 8px;
+}
+
+/* ----------------------------------------------------------- progresso */
+
+.barra {
+  height: 14px;
+  background: var(--fundo);
+  border: 2px solid var(--borda);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra__cheia {
+  height: 100%;
+  background: var(--menta);
+  border-radius: 999px;
+  transition: width 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   Pontuação e ranking
+   ========================================================================== */
+
+.nivel {
+  max-width: 620px;
+  margin-top: 22px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.nivel__cabecalho {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--tinta-fraca);
+  margin-bottom: 8px;
+}
+
+.ranking {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking__linha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 12px 16px;
+}
+
+/*
+ * A própria linha recebe destaque.
+ *
+ * Numa turma de trinta, achar o próprio nome na lista custa mais atenção do que
+ * a informação vale — e o ranking existe para a pessoa se localizar.
+ */
+.ranking__linha--eu {
+  border-color: var(--violeta);
+  background: var(--violeta-claro);
+}
+
+.ranking__posicao {
+  flex: 0 0 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--tinta-media);
+  background: var(--fundo);
+  border-radius: 10px;
+}
+
+.ranking__posicao--topo {
+  color: var(--branco);
+  background: var(--violeta);
+}
+
+.ranking__quem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ranking__nome {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ranking__ofensiva {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ambar-escuro);
+}
+
+.ranking__xp {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--violeta);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Redação
+   ========================================================================== */
+
+.escrita__rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.texto-do-aluno {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: var(--tinta);
+}
+
+.apontamentos {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+}
+
+.apontamento {
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.apontamento__criterio {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  padding: 4px 9px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+/*
+ * O erro e a correção lado a lado.
+ *
+ * Mostrar só a forma certa não ensina: o aluno precisa reconhecer o que ele
+ * escreveu para lembrar na próxima vez.
+ */
+.apontamento__troca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.apontamento__antes {
+  color: var(--coral-escuro);
+  background: var(--coral-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.apontamento__seta {
+  color: var(--tinta-fraca);
+}
+
+.apontamento__depois {
+  color: var(--menta-escuro);
+  background: var(--menta-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+}
+
+.apontamento__explicacao {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+/* As observações não localizadas ficam recolhidas, mas acessíveis. */
+.duvidosos {
+  max-width: 680px;
+  margin-top: 20px;
+}
+
+.duvidosos summary {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.duvidosos summary:hover {
+  color: var(--tinta-media);
+}
+
+.parecer {
+  max-width: 680px;
+  background: var(--violeta-claro);
+  border: 2px solid var(--violeta);
+  border-radius: var(--canto-grande);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.parecer__texto {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.parecer__nota {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--violeta);
+  margin-top: 12px;
+}
+
+/* ==========================================================================
+   Conversação
+   ========================================================================== */
+
+.conversa {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 680px;
+  margin-bottom: 20px;
+}
+
+.fala {
+  max-width: 84%;
+  padding: 14px 18px;
+  border-radius: var(--canto-grande);
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/*
+ * O aluno à direita, o parceiro à esquerda.
+ *
+ * É a convenção de qualquer aplicativo de mensagem, e vale respeitar: inverter
+ * obrigaria a pessoa a ler o rótulo para saber quem falou.
+ */
+.fala--aluno {
+  align-self: flex-end;
+  background: var(--violeta);
+  color: var(--branco);
+  border-bottom-right-radius: 6px;
+}
+
+.fala--assistente {
+  align-self: flex-start;
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-bottom-left-radius: 6px;
+}
+
+.fala__texto {
+  white-space: pre-wrap;
+}
+
+/* As correções ficam presas à fala, e fora do fio da conversa. */
+.fala__correcoes {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 2px solid rgba(255, 255, 255, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.fala__correcoes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fala--pensando {
+  display: flex;
+  gap: 5px;
+  padding: 18px;
+}
+
+.ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tinta-fraca);
+  animation: pulsar 1.1s ease-in-out infinite;
+}
+
+.ponto:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.ponto:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes pulsar {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ponto {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
+.escrever {
+  display: flex;
+  gap: 10px;
+  max-width: 680px;
+}
+
+.escrever .campo__entrada {
+  flex: 1;
 }

@@ -236,10 +236,9 @@ Escrito de propósito, porque conhecer o limite faz parte do controle:
   amador, não botnet. Isso é problema de camada de rede.
 - **Dependência comprometida**: `npm audit` no CI pega o que já é conhecido, e
   não o que ainda não foi descoberto.
-- **A cadeia de ferramentas do Expo**: o `npm audit` acusa vinte e seis avisos
-  em `metro`, `tar`, `postcss` e `@expo/cli`. São pacotes de tempo de
-  compilação — não entram no APK — mas estão declarados como dependência de
-  produção do aplicativo, então `--omit=dev` não os separa. Corrigir exige subir
-  a versão maior do Expo, que é decisão de projeto e não `npm audit fix`. Por
-  isso a auditoria no CI **relata sem bloquear**: um CI cronicamente vermelho
-  por algo insolúvel ensina a ignorar CI vermelho.
+- **Dependência ainda não catalogada**: `npm audit` só conhece o que já foi
+  publicado. Hoje o projeto está com zero vulnerabilidades conhecidas e o passo
+  **bloqueia** o merge em qualquer alta ou crítica — isso passou a ser possível
+  quando o aplicativo saiu do repositório e levou junto a cadeia de ferramentas
+  do Expo, que trazia vinte e seis avisos insolúveis sem uma troca de versão
+  maior.
