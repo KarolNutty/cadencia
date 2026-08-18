@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import {
   type EntrarSaida,
+  cadastrarEntradaSchema,
   entrarEntradaSchema,
   plataformaSchema,
 } from '@cadencia/contrato';
@@ -108,6 +109,28 @@ export async function registrarRotasDeAutenticacao(
       return resposta
         .status(201)
         .send(entregarSessao(resposta, sessao, plataforma, producao));
+    },
+  );
+
+  app.post(
+    '/usuarios',
+    {
+      config: {
+        // Mais folgado que o login: cadastro legítimo é raro, mas errar o
+        // formulário três vezes seguidas é comum.
+        rateLimit: { max: 8, timeWindow: '10 minutes' },
+      },
+    },
+    async (requisicao, resposta) => {
+      const entrada = cadastrarEntradaSchema.parse(requisicao.body);
+      const plataforma = lerPlataforma(requisicao.headers['x-plataforma']);
+
+      const sessao = await autenticacao.cadastrar(entrada, { ip: requisicao.ip });
+
+      return resposta.status(201).send({
+        ...entregarSessao(resposta, sessao, plataforma, producao),
+        turmasQueEntrou: sessao.turmasQueEntrou,
+      });
     },
   );
 

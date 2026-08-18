@@ -10,6 +10,29 @@ jobs:
     name: Tipos, lint, formatação e testes
     runs-on: ubuntu-latest
 
+    # O Postgres sobe junto com o job. Sem ele, os testes que provam a
+    # autorização por recurso, a rotação de token e o tratamento de injeção
+    # simplesmente não rodam — e um pull request que quebre qualquer um deles
+    # passa verde. Teste que só roda na máquina de quem escreveu não protege
+    # nada.
+    services:
+      banco:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cadencia
+          POSTGRES_PASSWORD: cadencia
+          POSTGRES_DB: cadencia_teste
+        ports:
+          - 5433:5432
+        # O job começa antes de o Postgres aceitar conexão. Sem esta espera, a
+        # primeira migração falha com "connection refused" e parece erro de
+        # configuração.
+        options: >-
+          --health-cmd "pg_isready -U cadencia -d cadencia_teste"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 15
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,9 +43,9 @@ jobs:
 
       - run: npm ci
 
-      # Mesma sequência que roda na máquina local (npm run verificar). Se o
-      # comando do CI diverge do comando do desenvolvedor, o CI vira o primeiro
-      # a saber — e descobrir no GitHub o que o terminal já diria custa caro.
+      # A mesma sequência do `npm run verificar` local. Se o comando do CI
+      # diverge do comando de quem desenvolve, o CI vira o primeiro a saber —
+      # e descobrir no GitHub o que o terminal já diria custa caro.
       - name: Verificar tipos
         run: npm run typecheck
 
@@ -32,8 +55,25 @@ jobs:
       - name: Formatação
         run: npm run format:check
 
-      - name: Testes
+      - name: Testes sem infraestrutura
         run: npm run test:cobertura
+
+      - name: Preparar o banco de teste
+        run: cp .env.teste.example .env.teste
+
+      - name: Testes de integração
+        run: npm run test:integracao
+
+      # Compilar é a única prova de que o painel realmente monta: teste passa
+      # com um componente que nunca foi empacotado.
+      - name: Build do painel
+        run: npm run build:web
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cobertura
+          path: coverage/lcov.info
+          retention-days: 7
 
   segredos:
     name: Varredura de segredos
@@ -42,8 +82,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # O histórico inteiro, não só o último commit: segredo que já entrou
-          # no passado não sai com um commit de remoção — ele continua lá.
+          # O histórico inteiro: segredo que já entrou no passado não sai com um
+          # commit de remoção — ele continua lá.
           fetch-depth: 0
 
       - name: Procurar credenciais no código e no histórico
@@ -65,21 +105,9 @@ jobs:
 
       - run: npm ci
 
-      # A auditoria informa; não bloqueia. E vale explicar por quê, porque
-      # `|| true` num passo de segurança normalmente é preguiça disfarçada.
-      #
-      # Os avisos vêm todos da cadeia de ferramentas do Expo e do React Native:
-      # metro, tar, postcss, @expo/cli. São pacotes de tempo de compilação —
-      # eles não entram no APK — mas estão declarados como dependência de
-      # produção do aplicativo, então `--omit=dev` não os separa.
-      #
-      # Resolver exigiria subir a versão maior do Expo, o que é uma decisão de
-      # projeto e não um `npm audit fix`. Manter o passo bloqueando deixaria o
-      # CI vermelho de forma permanente por algo que ninguém pode consertar
-      # hoje — e um CI cronicamente vermelho ensina o time a ignorar CI
-      # vermelho, que é bem pior do que não ter auditoria.
-      #
-      # O relatório continua saindo a cada execução, para a dívida ficar
-      # visível em vez de esquecida.
+      # Falha em vulnerabilidade alta ou crítica; média e baixa entram no
+      # relatório sem travar. Com a saída do React Native, a cadeia de
+      # ferramentas que trazia dezenas de avisos insolúveis deixou o projeto, e
+      # o passo voltou a bloquear — que é o que ele deve fazer.
       - name: Auditar dependências
-        run: npm audit --audit-level=moderate || true
+        run: npm audit --audit-level=high

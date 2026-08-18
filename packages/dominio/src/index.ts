@@ -24,6 +24,36 @@ export {
 } from './agendamento';
 
 export {
+  type LinhaDoRanking,
+  type Ofensiva,
+  type PosicaoNoRanking,
+  type RevisaoPontuavel,
+  TETO_DIARIO_DE_XP,
+  calcularOfensiva,
+  nivelDeXp,
+  ordenarRanking,
+  xpDaRevisao,
+  xpDoDia,
+} from './pontuacao';
+
+export {
+  type EstadoDoTeste,
+  type Nivel,
+  type Pergunta,
+  type Resposta,
+  type ResultadoDoTeste,
+  MAXIMO_DE_PERGUNTAS,
+  MINIMO_DE_PERGUNTAS,
+  NIVEIS,
+  NIVEL_INICIAL,
+  iniciarTeste,
+  proximaPergunta,
+  responder,
+  resultado,
+  terminou,
+} from './nivelamento';
+
+export {
   type PalavraImportada,
   type ProblemaNaLinha,
   type ResultadoDaImportacao,

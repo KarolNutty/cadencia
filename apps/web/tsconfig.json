@@ -19,7 +19,8 @@
     "paths": {
       "@cadencia/cliente-api": ["../../packages/cliente-api/src/index.ts"],
       "@cadencia/contrato": ["../../packages/contrato/src/index.ts"],
-      "@cadencia/dominio": ["../../packages/dominio/src/index.ts"]
+      "@cadencia/dominio": ["../../packages/dominio/src/index.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

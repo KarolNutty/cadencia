@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import usuario from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Escolha } from './Escolha';
+import { Escolha } from '@/components/Escolha';
 
 /**
  * Construir um seletor significa reimplementar o que o `<select>` nativo dava

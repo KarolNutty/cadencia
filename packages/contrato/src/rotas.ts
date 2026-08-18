@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { diaDeEstudoSchema, identificadorSchema } from './comuns';
+import { diaDeEstudoSchema, fusoSchema, identificadorSchema } from './comuns';
 import {
   agendamentoSchema,
   cartaDaSessaoSchema,
@@ -54,9 +54,104 @@ export const minhasTurmasSaidaSchema = z.object({
   turmas: z.array(turmaSchema),
 });
 
-/** ------------------------------------------------------------- gestão */
-
+/** A escala do Quadro Comum Europeu, usada pelo nivelamento e pelos baralhos. */
 export const nivelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+
+/** --------------------------------------------------------- pontuação */
+
+export const ofensivaSchema = z.object({
+  dias: z.number().int().min(0),
+  /** A pessoa ainda pode estudar hoje e manter a sequência? */
+  emRisco: z.boolean(),
+  recorde: z.number().int().min(0),
+});
+
+export const pontuacaoSaidaSchema = z.object({
+  xpTotal: z.number().int().min(0),
+  xpHoje: z.number().int().min(0),
+  nivel: z.number().int().min(1),
+  /** XP dentro do nível atual, e quanto o próximo exige. */
+  atual: z.number().int().min(0),
+  proximo: z.number().int().min(1),
+  ofensiva: ofensivaSchema,
+});
+
+export const rankingSaidaSchema = z.object({
+  desde: diaDeEstudoSchema,
+  ranking: z.array(
+    z.object({
+      alunoId: identificadorSchema,
+      nome: z.string(),
+      xpNaSemana: z.number().int().min(0),
+      ofensiva: z.number().int().min(0),
+      posicao: z.number().int().min(1),
+      empatado: z.boolean(),
+    }),
+  ),
+});
+
+/** ------------------------------------------------------- nivelamento */
+
+/**
+ * A pergunta como ela chega ao aluno.
+ *
+ * **Sem o gabarito.** O índice da alternativa correta fica no servidor: mandá-lo
+ * junto faria qualquer pessoa com o console aberto ver a resposta antes de
+ * escolher, e o teste deixaria de medir qualquer coisa.
+ */
+export const perguntaDoTesteSchema = z.object({
+  id: identificadorSchema,
+  enunciado: z.string(),
+  alternativas: z.array(z.string()).min(2).max(6),
+});
+
+export const resultadoDoNivelamentoSchema = z.object({
+  nivel: nivelSchema,
+  confianca: z.number().min(0).max(1),
+  acertos: z.number().int().min(0),
+  total: z.number().int().min(0),
+  incoerencias: z.number().int().min(0),
+});
+
+export const proximaPerguntaSaidaSchema = z.object({
+  pergunta: perguntaDoTesteSchema.nullable(),
+  respondidas: z.number().int().min(0),
+  /** Preenchido quando o teste já terminou. */
+  resultado: resultadoDoNivelamentoSchema.nullable(),
+});
+
+export const responderNivelamentoEntradaSchema = z.object({
+  perguntaId: identificadorSchema,
+  escolha: z.number().int().min(0).max(5),
+});
+
+export const responderNivelamentoSaidaSchema = z.object({
+  acertou: z.boolean(),
+  resultado: resultadoDoNivelamentoSchema.nullable(),
+});
+
+/** ---------------------------------------------------------- cadastro */
+
+/**
+ * Criação de conta.
+ *
+ * O papel **não** vem daqui. Quem se cadastra pela tela é aluno; professor é
+ * criado pela escola. Aceitar o papel na entrada deixaria qualquer pessoa se
+ * declarar professor e ver a turma inteira.
+ */
+export const cadastrarEntradaSchema = z.object({
+  nome: z.string().trim().min(2, 'Diga seu nome.').max(120),
+  email: z.string().trim().toLowerCase().email('E-mail inválido.'),
+  senha: z.string().min(12, 'Use ao menos 12 caracteres.'),
+  fuso: fusoSchema.optional(),
+});
+
+export const cadastrarSaidaSchema = entrarSaidaSchema.extend({
+  /** Em quantas turmas a pessoa entrou por convite pendente. */
+  turmasQueEntrou: z.number().int().min(0),
+});
+
+/** ------------------------------------------------------------- gestão */
 
 export const criarTurmaEntradaSchema = z.object({
   nome: z.string().trim().min(2, 'Dê um nome à turma.').max(120),
@@ -225,6 +320,16 @@ export const erroSchema = z.object({
 });
 
 export type MinhasTurmasSaida = z.infer<typeof minhasTurmasSaidaSchema>;
+export type Ofensiva = z.infer<typeof ofensivaSchema>;
+export type PontuacaoSaida = z.infer<typeof pontuacaoSaidaSchema>;
+export type RankingSaida = z.infer<typeof rankingSaidaSchema>;
+export type PerguntaDoTeste = z.infer<typeof perguntaDoTesteSchema>;
+export type ResultadoDoNivelamento = z.infer<typeof resultadoDoNivelamentoSchema>;
+export type ProximaPerguntaSaida = z.infer<typeof proximaPerguntaSaidaSchema>;
+export type ResponderNivelamentoEntrada = z.infer<typeof responderNivelamentoEntradaSchema>;
+export type ResponderNivelamentoSaida = z.infer<typeof responderNivelamentoSaidaSchema>;
+export type CadastrarEntrada = z.infer<typeof cadastrarEntradaSchema>;
+export type CadastrarSaida = z.infer<typeof cadastrarSaidaSchema>;
 export type Nivel = z.infer<typeof nivelSchema>;
 export type CriarTurmaEntrada = z.infer<typeof criarTurmaEntradaSchema>;
 export type MatricularEntrada = z.infer<typeof matricularEntradaSchema>;

@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { Usuario } from '@cadencia/contrato';
 import type { Banco, Executor } from '../../infra/banco';
 import { ErroDaApi, credenciaisInvalidas, naoAutenticado } from '../../compartilhado/erros';
-import { conferirSenha, gastarTempoDeVerificacao } from './senha';
+import { conferirSenha, criarHashDeSenha, gastarTempoDeVerificacao } from './senha';
 import {
   type Emissor,
   VIDA_DA_RENOVACAO_EM_SEGUNDOS,
@@ -119,6 +119,81 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
   }
 
   return {
+    /**
+     * Cria a conta e resolve os convites pendentes.
+     *
+     * Quem se cadastra é **sempre aluno**: professor é criado pela escola. O
+     * papel não vem da entrada, e por isso ninguém pode se declarar professor.
+     *
+     * Se houver convite pendente para este e-mail, a matrícula acontece na
+     * mesma transação. Sem isso o convite ficaria guardado para sempre, e o
+     * professor teria de convidar de novo depois — sem saber que precisa.
+     */
+    async cadastrar(
+      dados: { nome: string; email: string; senha: string; fuso?: string | undefined },
+      contexto: { ip?: string | null } = {},
+    ): Promise<SessaoCriada & { turmasQueEntrou: number }> {
+      const email = dados.email.trim().toLowerCase();
+      const senhaHash = await criarHashDeSenha(dados.senha);
+
+      const criado = await sql.begin(async (transacao) => {
+        const existentes = await transacao`SELECT 1 FROM usuarios WHERE email = ${email}`;
+
+        if (existentes.length > 0) {
+          throw new ErroDaApi('conflito', 'Já existe uma conta com este e-mail.');
+        }
+
+        const [linha] = await transacao<LinhaDeUsuario[]>`
+          INSERT INTO usuarios ${transacao({
+            nome: dados.nome.trim(),
+            email,
+            senha_hash: senhaHash,
+            papel: 'aluno',
+            fuso: dados.fuso ?? 'America/Sao_Paulo',
+          })}
+          RETURNING id, nome, email, senha_hash, papel, fuso
+        `;
+
+        const convites = await transacao<{ turma_id: string }[]>`
+          SELECT turma_id FROM convites WHERE email = ${email} AND aceito_em IS NULL
+        `;
+
+        for (const convite of convites) {
+          await transacao`
+            INSERT INTO matriculas ${transacao({
+              turma_id: convite.turma_id,
+              aluno_id: linha!.id,
+            })}
+            ON CONFLICT DO NOTHING
+          `;
+        }
+
+        await transacao`
+          UPDATE convites SET aceito_em = now()
+          WHERE email = ${email} AND aceito_em IS NULL
+        `;
+
+        return { usuario: linha!, turmas: convites.length };
+      });
+
+      const familiaId = randomUUID();
+      const { acesso, renovacao } = await emitirParFamiliar(
+        sql,
+        criado.usuario.id,
+        familiaId,
+      );
+
+      await registrar({ tipo: 'cadastro', usuarioId: criado.usuario.id, ip: contexto.ip });
+
+      return {
+        usuario: paraUsuario(criado.usuario),
+        acesso,
+        renovacao,
+        expiraEm: VIDA_DO_ACESSO_EM_SEGUNDOS,
+        turmasQueEntrou: criado.turmas,
+      };
+    },
+
     async entrar(
       email: string,
       senha: string,

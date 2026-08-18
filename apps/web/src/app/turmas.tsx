@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Escolha } from '../../compartilhado/Escolha';
-import { Cabecalho, useTurma } from '../../compartilhado/Estrutura';
-import { useSessao } from '../../compartilhado/sessao';
-import { arquivarTurma, criarTurma } from './api';
+import { Escolha } from '@/components/Escolha';
+import { Cabecalho, useTurma } from '@/components/Estrutura';
+import { useSessao } from '@/providers/sessao';
+import { arquivarTurma, criarTurma } from '@/lib/api';
 
 const IDIOMAS = ['inglês', 'espanhol', 'francês', 'alemão', 'italiano', 'japonês'];
 

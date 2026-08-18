@@ -7,7 +7,7 @@ import {
   ordenarPorPrioridade,
   resumirTurma,
   situacaoDo,
-} from './leitura';
+} from '@/lib/leitura';
 
 const HOJE = diaDeEstudo('2026-08-16');
 

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      '@': resolve(__dirname, 'src'),
       '@cadencia/cliente-api': resolve(
         __dirname,
         '../../packages/cliente-api/src/index.ts',

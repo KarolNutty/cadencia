@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { Turma } from '@cadencia/contrato';
-import { Escolha } from './Escolha';
-import { useSessao } from './sessao';
-import { buscarTurmas } from '../funcionalidades/gestao/api';
+import { Escolha } from '@/components/Escolha';
+import { type Secao, secoesDe } from '@/config/secoes';
+import { buscarTurmas } from '@/lib/api';
+import { useSessao } from '@/providers/sessao';
 
 /**
- * A estrutura do painel.
+ * A estrutura do portal.
  *
  * Barra lateral persistente com quatro seções, e não uma página que rola. Cada
  * seção é uma tarefa diferente do professor, e misturar "o que ensino hoje" com
@@ -17,14 +18,7 @@ import { buscarTurmas } from '../funcionalidades/gestao/api';
  * muda o que o professor faz depois de ler.
  */
 
-export type Secao = 'aula' | 'alunos' | 'palavras' | 'turmas';
-
-const SECOES: { chave: Secao; rotulo: string; descricao: string }[] = [
-  { chave: 'aula', rotulo: 'Próxima aula', descricao: 'O que revisar' },
-  { chave: 'alunos', rotulo: 'Alunos', descricao: 'Quem está na turma' },
-  { chave: 'palavras', rotulo: 'Palavras', descricao: 'O conteúdo' },
-  { chave: 'turmas', rotulo: 'Turmas', descricao: 'Criar e arquivar' },
-];
+export type { Secao };
 
 interface Contexto {
   turma: Turma | null;
@@ -71,10 +65,12 @@ export function Estrutura({
             <div className="lateral__marca">
               <span className="lateral__nome">Cadência</span>
             </div>
-            <span className="lateral__papel">painel do professor</span>
+            <span className="lateral__papel">
+              {usuario?.papel === 'professor' ? 'painel do professor' : 'área do aluno'}
+            </span>
           </div>
 
-          {turmas.length > 0 && (
+          {turmas.length > 1 && (
             <Escolha
               rotulo="Turma"
               valor={turma?.id ?? ''}
@@ -87,7 +83,7 @@ export function Estrutura({
           )}
 
           <ul className="menu" aria-label="Seções">
-            {SECOES.map((item) => (
+            {secoesDe(usuario?.papel ?? 'aluno').map((item) => (
               <li key={item.chave}>
                 <button
                   className={`menu__item${secao === item.chave ? ' menu__item--ativo' : ''}`}

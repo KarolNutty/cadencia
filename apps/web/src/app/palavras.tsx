@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { ImportarPalavrasSaida, Nivel } from '@cadencia/contrato';
 import { EXEMPLO_DE_LISTA } from '@cadencia/dominio';
-import { Escolha } from '../../compartilhado/Escolha';
-import { Cabecalho, useTurma } from '../../compartilhado/Estrutura';
-import { useSessao } from '../../compartilhado/sessao';
-import { apagarBaralho, buscarBaralhos, criarBaralho, importarPalavras } from './api';
+import { Escolha } from '@/components/Escolha';
+import { Cabecalho, useTurma } from '@/components/Estrutura';
+import { useSessao } from '@/providers/sessao';
+import { apagarBaralho, buscarBaralhos, criarBaralho, importarPalavras } from '@/lib/api';
 
 const NIVEIS: Nivel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 

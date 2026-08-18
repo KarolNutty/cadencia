@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { criarCliente, type Cliente, type Tokens } from '@cadencia/cliente-api';
-import type { EntrarSaida, Usuario } from '@cadencia/contrato';
+import type { CadastrarSaida, EntrarSaida, Usuario } from '@cadencia/contrato';
 
 const URL_DA_API = import.meta.env.VITE_API_URL ?? 'http://localhost:3333';
 
@@ -9,6 +9,8 @@ interface Sessao {
   usuario: Usuario | null;
   cliente: Cliente;
   entrar: (email: string, senha: string) => Promise<void>;
+  /** Devolve em quantas turmas a pessoa entrou por convite pendente. */
+  cadastrar: (nome: string, email: string, senha: string) => Promise<number>;
   sair: () => Promise<void>;
 }
 
@@ -88,6 +90,29 @@ export function ProvedorDeSessao({
     [cliente],
   );
 
+  const cadastrar = useCallback(
+    async (nome: string, email: string, senha: string) => {
+      const dados = await cliente.chamar<CadastrarSaida>('/usuarios', {
+        metodo: 'POST',
+        corpo: {
+          nome,
+          email,
+          senha,
+          // O fuso vem do navegador: é onde a pessoa está que define quando o
+          // dia de estudo vira.
+          fuso: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        publica: true,
+      });
+
+      acesso.current = dados.acesso;
+      setUsuario(dados.usuario);
+
+      return dados.turmasQueEntrou;
+    },
+    [cliente],
+  );
+
   const sair = useCallback(async () => {
     try {
       await cliente.chamar('/sessoes', { metodo: 'DELETE' });
@@ -99,8 +124,8 @@ export function ProvedorDeSessao({
   }, [cliente, perderSessao]);
 
   const valor = useMemo(
-    () => ({ usuario, cliente, entrar, sair }),
-    [usuario, cliente, entrar, sair],
+    () => ({ usuario, cliente, entrar, cadastrar, sair }),
+    [usuario, cliente, entrar, cadastrar, sair],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

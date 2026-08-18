@@ -97,6 +97,26 @@ de agendamento.
 | Acha difícil  | 1 → 3 → 6 → 11 → 19 → 30 → 48            |
 | Carta travada | fica em 1 dia e sai da sessão no 4º erro |
 
+### XP não se ganha por volume
+
+Parece decisão de produto e é decisão de engenharia. Dar ponto por carta
+avaliada faz o aluno marcar "fácil" trinta vezes, liderar o ranking sem ter
+estudado e — pior — aprender o comportamento que **destrói o próprio
+agendamento**, porque marcar fácil no que não se sabe manda a carta para daqui
+a dois meses.
+
+O sistema de pontos não pode premiar o que o produto existe para evitar. Então:
+
+| Regra                            | Por quê                                                |
+| -------------------------------- | ------------------------------------------------------ |
+| Só carta **vencida** rende ponto | Senão bastaria reabrir o baralho toda hora             |
+| Errar não desconta               | Punir o erro empurra a marcar "bom" no que não se sabe |
+| Teto diário de 200 XP            | Sem ele o ranking mede tempo livre, não constância     |
+| Ranking **da semana**            | Acumulado trava: quem entra depois nunca alcança       |
+
+O XP é apurado no servidor, a partir do agendamento gravado **antes** da
+revisão. O cliente não informa quanto ganhou.
+
 ### O painel é uma fila de urgência, não um cadastro
 
 Quem tem palavra travada aparece primeiro, depois quem sumiu, depois quem está
@@ -191,6 +211,28 @@ O padrão dos quatro é o mesmo, e é a lição que eu levo do projeto:
 > falhar pelo motivo certo.
 
 ---
+
+## O que o pipeline barra
+
+Roda a cada push e pull request, e **impede o merge** em qualquer destes casos:
+
+| Barra quando                                    | Passo                      |
+| ----------------------------------------------- | -------------------------- |
+| Um tipo não fecha em qualquer dos três projetos | `typecheck`                |
+| Qualquer regra de lint quebra, inclusive aviso  | `lint --max-warnings 0`    |
+| Um arquivo sai do padrão de formatação          | `format:check`             |
+| Um teste falha, com ou sem banco                | `test` e `test:integracao` |
+| O painel não compila                            | `build:web`                |
+| Um segredo aparece no código ou no histórico    | `gitleaks`                 |
+| Há vulnerabilidade alta ou crítica              | `npm audit`                |
+
+O Postgres sobe como serviço do próprio job. Sem isso, os testes que provam a
+autorização por recurso, a rotação de token e o tratamento de injeção não
+rodariam — e um pull request que quebrasse qualquer um deles passaria verde.
+**Teste que só roda na máquina de quem escreveu não protege nada.**
+
+O `gitleaks` varre o histórico completo, e não só o último commit: segredo que
+já entrou no passado não sai com um commit de remoção.
 
 ## Documentos
 
