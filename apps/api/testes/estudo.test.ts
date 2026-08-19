@@ -34,7 +34,7 @@ afterAll(async () => {
 /**
  * O dia de estudo do aluno, como o **app** o calcularia.
  *
- * Antes isto era `new Date().toISOString().slice(0, 10)` — o dia em UTC, cru.
+ * Antes isto era `new Date().toISOString().slice(0, 10)`, o dia em UTC, cru.
  * Parece equivalente e não é: quem roda o teste às onze da noite no Brasil já
  * está no dia seguinte em UTC, e a regra das 4h joga esse dia de volta. O teste
  * passava de manhã e falhava à noite.
@@ -217,7 +217,7 @@ describe('acesso a recurso alheio', () => {
   /**
    * O furo mais comum em sistema real: trocar o id na URL.
    *
-   * Não exige ferramenta nenhuma, e o endpoint "funciona" — por isso não
+   * Não exige ferramenta nenhuma, e o endpoint "funciona", por isso não
    * aparece em revisão apressada nem em teste de rota feliz.
    */
 

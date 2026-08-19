@@ -18,8 +18,8 @@ import type { Banco, Executor } from '../../infra/banco';
  *
  * **O estado da busca vive no servidor, e o gabarito nunca sai daqui.**
  *
- * A alternativa — mandar as perguntas com a resposta e deixar o navegador
- * calcular — seria mais simples e mais rápida, e destruiria o teste: qualquer
+ * A alternativa, mandar as perguntas com a resposta e deixar o navegador
+ * calcular, seria mais simples e mais rápida, e destruiria o teste: qualquer
  * pessoa com o console aberto veria o gabarito antes de escolher, ou reescreveria
  * o estado para sair com C2. Um teste de nivelamento que pode ser burlado não
  * mede nível nenhum, e o aluno acaba numa turma onde não entende nada.

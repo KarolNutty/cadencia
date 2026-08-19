@@ -6,6 +6,8 @@ import {
   interpretarResposta,
 } from './provedor';
 
+const MODELO = 'gemini-3.6-flash';
+
 describe('leitura da resposta', () => {
   it('lê resposta e correções', () => {
     const lida = interpretarResposta(
@@ -31,6 +33,17 @@ describe('leitura da resposta', () => {
     const lida = interpretarResposta(JSON.stringify({ resposta: 'ok', correcoes: muitas }));
 
     expect(lida.correcoes).toHaveLength(2);
+  });
+
+  it('JSON quebrado vira erro que explica, e não SyntaxError', () => {
+    /**
+     * A mensagem original fala de posição e coluna, o que manda quem investiga
+     * procurar defeito no leitor. O problema é outro: o modelo devolveu algo
+     * que não é JSON, e é isso que precisa aparecer.
+     */
+    expect(() => interpretarResposta('{"resposta":"cortada no me')).toThrow(
+      /formato inesperado/,
+    );
   });
 
   it('aguenta resposta sem correções', () => {
@@ -96,7 +109,7 @@ describe('parceiro Gemini', () => {
         ),
     ) as unknown as typeof fetch;
 
-    await criarProvedorGemini('chave', buscar).conversar({
+    await criarProvedorGemini('chave', MODELO, buscar).conversar({
       cenario: 'no aeroporto',
       nivel: 'B1',
       idioma: 'inglês',
@@ -119,6 +132,67 @@ describe('parceiro Gemini', () => {
     expect(corpo.contents[2]?.parts[0]?.text).toBe('Where is the gate?');
   });
 
+  it('o modelo vem da configuração, e não fixo no código', async () => {
+    /**
+     * Provedores aposentam modelo sem aviso: o `gemini-2.0-flash` saiu do ar e
+     * a correção não deveria exigir mexer no código, abrir pull request e
+     * publicar de novo. Trocar passa a ser editar uma linha do ambiente.
+     */
+    const buscar = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            candidates: [{ content: { parts: [{ text: '{"resposta":"ok"}' }] } }],
+          }),
+          { status: 200 },
+        ),
+    ) as unknown as typeof fetch;
+
+    await criarProvedorGemini('chave', 'modelo-inventado-para-o-teste', buscar).conversar({
+      cenario: 'x',
+      nivel: 'A1',
+      idioma: 'inglês',
+      janela: [],
+      mensagem: 'oi',
+    });
+
+    const [url] = (buscar as unknown as { mock: { calls: [string, RequestInit][] } }).mock
+      .calls[0]!;
+
+    expect(url).toContain('modelo-inventado-para-o-teste');
+  });
+
+  it('resposta cortada por limite é reconhecida como tal', async () => {
+    /**
+     * Modelos recentes gastam parte do orçamento raciocinando antes de
+     * escrever, e o JSON sai truncado. Sem reconhecer o `finishReason`, o erro
+     * fala de sintaxe e manda quem investiga para o lado errado: a resposta
+     * nunca terminou, não é a leitura que está errada.
+     */
+    const buscar = (async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: { parts: [{ text: '{"resposta":"come' }] },
+              finishReason: 'MAX_TOKENS',
+            },
+          ],
+        }),
+        { status: 200 },
+      )) as unknown as typeof fetch;
+
+    await expect(
+      criarProvedorGemini('chave', MODELO, buscar).conversar({
+        cenario: 'x',
+        nivel: 'A1',
+        idioma: 'inglês',
+        janela: [],
+        mensagem: 'oi',
+      }),
+    ).rejects.toThrow(/cortada por limite/);
+  });
+
   it('a chave vai no cabeçalho, nunca na URL', async () => {
     // Query string vaza em log de servidor e histórico de proxy.
     const buscar = vi.fn(
@@ -131,7 +205,7 @@ describe('parceiro Gemini', () => {
         ),
     ) as unknown as typeof fetch;
 
-    await criarProvedorGemini('segredo', buscar).conversar({
+    await criarProvedorGemini('segredo', MODELO, buscar).conversar({
       cenario: 'x',
       nivel: 'A1',
       idioma: 'inglês',
@@ -150,10 +224,10 @@ describe('parceiro Gemini', () => {
 
 describe('escolha do parceiro', () => {
   it('sem chave, usa o simulado', () => {
-    expect(escolherProvedor(undefined).nome).toBe('simulado');
+    expect(escolherProvedor(undefined, MODELO).nome).toBe('simulado');
   });
 
   it('com chave, usa o Gemini', () => {
-    expect(escolherProvedor('uma-chave-qualquer').nome).toBe('gemini');
+    expect(escolherProvedor('uma-chave-qualquer', MODELO).nome).toBe('gemini');
   });
 });

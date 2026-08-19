@@ -14,7 +14,7 @@ const alias = {
 /**
  * Duas suítes separadas de propósito.
  *
- * `npm test` roda só o que não precisa de infraestrutura — e por isso roda em
+ * `npm test` roda só o que não precisa de infraestrutura, e por isso roda em
  * qualquer máquina, em segundos, sem Docker. Os testes de integração exigem o
  * Postgres do `docker compose` e ficam em `npm run test:integracao`.
  *
@@ -30,6 +30,8 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['{apps,packages}/*/src/**/*.test.{ts,tsx}'],
+    // Fornece ao jsdom o que o navegador tem e ele não implementa.
+    setupFiles: ['apps/web/src/testes/preparar.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text'],

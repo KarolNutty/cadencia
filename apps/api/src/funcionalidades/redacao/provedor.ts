@@ -1,3 +1,5 @@
+import { ErroDaApi } from '../../compartilhado/erros';
+import { erroDoProvedor } from '../../compartilhado/provedor-de-ia';
 import { CRITERIOS, type AnaliseDaIa, type Criterio } from '@cadencia/dominio';
 
 /**
@@ -71,10 +73,24 @@ export function interpretarResposta(bruto: string): AnaliseDaIa {
     .replace(/```\s*$/i, '')
     .trim();
 
-  const dados = JSON.parse(semCercas) as {
-    resumo?: unknown;
-    apontamentos?: unknown;
-  };
+  /*
+   * JSON quebrado vira erro que explica, e não `SyntaxError`.
+   *
+   * A mensagem original fala de posição e coluna, o que manda quem investiga
+   * procurar defeito no leitor. O problema é outro: o modelo devolveu algo que
+   * não é JSON válido, e o que importa saber é isso.
+   */
+  let dados: { resumo?: unknown; apontamentos?: unknown };
+
+  try {
+    dados = JSON.parse(semCercas) as typeof dados;
+  } catch {
+    throw new ErroDaApi(
+      'servico_indisponivel',
+      'A análise da IA veio em formato inesperado.',
+      [{ campo: 'provedor', motivo: `começo do que veio: ${semCercas.slice(0, 120)}` }],
+    );
+  }
 
   const apontamentos = Array.isArray(dados.apontamentos) ? dados.apontamentos : [];
 
@@ -106,6 +122,7 @@ export function interpretarResposta(bruto: string): AnaliseDaIa {
  */
 export function criarProvedorGemini(
   chave: string,
+  modelo: string,
   buscar: typeof fetch = fetch,
 ): ProvedorDeAnalise {
   return {
@@ -113,7 +130,7 @@ export function criarProvedorGemini(
 
     async analisar(pedido) {
       const resposta = await buscar(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
         {
           method: 'POST',
           headers: {
@@ -126,22 +143,44 @@ export function criarProvedorGemini(
               // Correção precisa ser reproduzível: o mesmo texto não pode
               // receber apontamentos diferentes a cada tentativa.
               temperature: 0.2,
+              // Folgado: modelos recentes gastam parte do orçamento raciocinando
+              // antes de escrever, e uma análise cortada estoura na leitura do
+              // JSON com um erro que fala de sintaxe.
+              maxOutputTokens: 4096,
               responseMimeType: 'application/json',
             },
           }),
         },
       );
 
-      if (!resposta.ok) {
-        throw new Error(`Gemini respondeu ${resposta.status}`);
-      }
+      if (!resposta.ok) throw await erroDoProvedor(resposta, chave);
 
       const dados = (await resposta.json()) as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
+        candidates?: {
+          content?: { parts?: { text?: string }[] };
+          finishReason?: string;
+        }[];
       };
 
-      const texto = dados.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!texto) throw new Error('Gemini não devolveu conteúdo.');
+      const candidato = dados.candidates?.[0];
+      const texto = candidato?.content?.parts?.[0]?.text;
+
+      if (candidato?.finishReason === 'MAX_TOKENS') {
+        throw new ErroDaApi(
+          'servico_indisponivel',
+          'A análise da IA foi cortada por limite de tamanho.',
+          [{ campo: 'provedor', motivo: 'finishReason: MAX_TOKENS' }],
+        );
+      }
+
+      if (!texto) {
+        throw new ErroDaApi('servico_indisponivel', 'A IA não devolveu conteúdo.', [
+          {
+            campo: 'provedor',
+            motivo: `finishReason: ${candidato?.finishReason ?? 'ausente'}`,
+          },
+        ]);
+      }
 
       return interpretarResposta(texto);
     },
@@ -152,7 +191,7 @@ export function criarProvedorGemini(
  * O provedor simulado.
  *
  * Reconhece alguns erros clássicos de quem fala português aprendendo inglês.
- * Não é inteligência — é uma lista — e está identificado como tal na resposta,
+ * Não é inteligência, é uma lista, e está identificado como tal na resposta,
  * para ninguém confundir a demonstração com o produto.
  */
 const ERROS_CONHECIDOS: {
@@ -165,7 +204,7 @@ const ERROS_CONHECIDOS: {
     procurar: /\bi am agree\b/i,
     criterio: 'gramatica',
     sugestao: 'I agree',
-    explicacao: 'Em inglês "agree" já é o verbo — não se usa o verbo "to be" antes dele.',
+    explicacao: 'Em inglês "agree" já é o verbo, não se usa o verbo "to be" antes dele.',
   },
   {
     procurar: /\bi have \d+ years?\b/i,
@@ -217,7 +256,7 @@ export function criarProvedorSimulado(): ProvedorDeAnalise {
         return [
           {
             criterio: erro.criterio,
-            // O trecho é o que foi realmente casado no texto — nunca o padrão.
+            // O trecho é o que foi realmente casado no texto, nunca o padrão.
             trecho: encontrado[0],
             sugestao: erro.sugestao,
             explicacao: erro.explicacao,
@@ -237,6 +276,9 @@ export function criarProvedorSimulado(): ProvedorDeAnalise {
 }
 
 /** Escolhe o provedor conforme o ambiente. */
-export function escolherProvedor(chave: string | undefined): ProvedorDeAnalise {
-  return chave ? criarProvedorGemini(chave) : criarProvedorSimulado();
+export function escolherProvedor(
+  chave: string | undefined,
+  modelo: string,
+): ProvedorDeAnalise {
+  return chave ? criarProvedorGemini(chave, modelo) : criarProvedorSimulado();
 }

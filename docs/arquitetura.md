@@ -39,19 +39,19 @@ apps/mobile/src/
 Cada funcionalidade exporta pelo `index.ts` só o que as outras precisam. Nada de
 `import { algo } from '../estudo/componentes/CartaInterna'`.
 
-E isso não depende de disciplina — há regra de ESLint que quebra o build no
+E isso não depende de disciplina, há regra de ESLint que quebra o build no
 import cruzado, do mesmo jeito que a regra que impede o domínio de conhecer
 framework.
 
 ### Pasta nasce quando há conteúdo
 
 Um arquivo solto na raiz do pacote é melhor que uma pasta com um arquivo dentro.
-`packages/dominio` tem três arquivos e nenhuma subpasta — criar `regras/`,
+`packages/dominio` tem três arquivos e nenhuma subpasta, criar `regras/`,
 `tipos/` e `utilitarios/` para três arquivos parece organização e só adiciona
 cliques.
 
 E pasta vazia é pior que desorganização: ela promete conteúdo que não existe, e
-a próxima pessoa perde tempo procurando. Já aconteceu aqui — `apps/api/src/compartilhado/`
+a próxima pessoa perde tempo procurando. Já aconteceu aqui, `apps/api/src/compartilhado/`
 foi criada "para depois" e removida assim que percebi.
 
 A estrutura por funcionalidade descrita acima vale para as **aplicações**, que
@@ -62,7 +62,7 @@ caso.
 ### Quando algo vira compartilhado
 
 Só depois de a **segunda** funcionalidade precisar. Mover cedo demais produz uma
-abstração desenhada para um caso só, que a segunda não encaixa — e aí ela ganha
+abstração desenhada para um caso só, que a segunda não encaixa, e aí ela ganha
 um parâmetro, depois outro, até virar aquela função com sete opções booleanas.
 
 ---
@@ -76,7 +76,7 @@ um parâmetro, depois outro, até virar aquela função com sete opções boolea
 | `config`   | Validação de ambiente, tsconfig e eslint comuns | todos                  |
 
 **`dominio` não importa nada.** Nem contrato, nem zod, nem framework. É o que
-permite testá-lo em Node puro, sem infraestrutura — e é o que faz o mesmo código
+permite testá-lo em Node puro, sem infraestrutura, e é o que faz o mesmo código
 rodar no servidor e dentro do app.
 
 A regra está no ESLint:
@@ -94,7 +94,7 @@ apertada.
 ## Por que não Turborepo agora
 
 Workspaces do npm bastam enquanto o build é rápido. Turborepo resolve **cache e
-paralelismo**, e um projeto com dois pacotes não tem esse problema — adotá-lo
+paralelismo**, e um projeto com dois pacotes não tem esse problema, adotá-lo
 antes é configuração que ninguém sabe explicar em entrevista.
 
 Entra quando `npm run verificar` passar de uns 30 segundos. Se entrar antes, é
@@ -109,7 +109,7 @@ dentro de `funcionalidades/*/api` e `ganchos`.
 
 A escolha não é sobre gosto: dado de servidor tem invalidação, revalidação e
 estado de carregando/erro por natureza. Reimplementar isso com `useState` e
-`useEffect` é reescrever o TanStack Query pior — e é onde nasce o bug de tela
+`useEffect` é reescrever o TanStack Query pior, e é onde nasce o bug de tela
 mostrando dado velho depois de salvar.
 
 ---
@@ -118,7 +118,7 @@ mostrando dado velho depois de salvar.
 
 O **cliente** informa o dia da revisão; o servidor confere e grava.
 
-Parece contraintuitivo — normalmente o servidor manda no tempo. Mas só o
+Parece contraintuitivo, normalmente o servidor manda no tempo. Mas só o
 cliente sabe em que fuso o aluno está e se já passou das 4h da manhã. Servidor
 calculando faria quem estuda à 1h aparecer no dia seguinte e perder a sequência
 por estar estudando.

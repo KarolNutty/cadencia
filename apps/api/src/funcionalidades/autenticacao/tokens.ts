@@ -8,7 +8,7 @@ import type { Papel } from '@cadencia/contrato';
  *
  * **O algoritmo é fixado na verificação.** Um JWT declara no próprio cabeçalho
  * com que algoritmo foi assinado, e uma biblioteca que confia nessa declaração
- * aceita `alg: none` — token sem assinatura nenhuma. É uma falha antiga e que
+ * aceita `alg: none`, token sem assinatura nenhuma. É uma falha antiga e que
  * ainda aparece em produção. Aqui a lista de algoritmos aceitos é constante.
  *
  * **Acesso e renovação usam segredos diferentes e carregam o próprio tipo.**
@@ -45,7 +45,7 @@ export interface DadosDaRenovacao {
    *
    * Cada entrada cria uma família. Renovar emite um token novo na mesma
    * família e invalida o anterior. Se um token já usado reaparecer, a família
-   * inteira cai — ver `deteccao-de-reuso` no serviço.
+   * inteira cai, ver `deteccao-de-reuso` no serviço.
    */
   familiaId: string;
   /** Identificador deste token. É o que o banco marca como usado. */

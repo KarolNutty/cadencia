@@ -81,7 +81,7 @@ export function criarRepositorioDeEstudo(sql: Executor) {
      * As turmas de um usuário, conforme o papel dele.
      *
      * O id vem do token de quem chamou. Não existe parâmetro para pedir a lista
-     * de outra pessoa — a rota simplesmente não oferece essa possibilidade, que
+     * de outra pessoa, a rota simplesmente não oferece essa possibilidade, que
      * é mais forte do que oferecê-la e conferir depois.
      */
     async listarTurmas(
@@ -143,8 +143,8 @@ export function criarRepositorioDeEstudo(sql: Executor) {
     /**
      * Os alunos da turma, com o andamento de cada um.
      *
-     * Uma consulta só, com agregação no banco. A alternativa — carregar os
-     * alunos e depois consultar o progresso de cada um — é o problema N+1: com
+     * Uma consulta só, com agregação no banco. A alternativa, carregar os
+     * alunos e depois consultar o progresso de cada um, é o problema N+1: com
      * trinta alunos, trinta e uma idas ao banco a cada abertura do painel.
      */
     async alunosDaTurma(turmaId: string): Promise<
@@ -173,8 +173,7 @@ export function criarRepositorioDeEstudo(sql: Executor) {
           u.id, u.nome, u.email, u.fuso,
           (SELECT max(r.dia) FROM revisoes r WHERE r.aluno_id = u.id) AS ultimo_estudo,
           -- O "hoje" é calculado por linha, no fuso de CADA aluno, e com a
-          -- mesma regra das 4h do domínio. Usar um único dia de referência —
-          -- o do servidor — faria quem está em outro fuso, ou quem estuda de
+          -- mesma regra das 4h do domínio. Usar um único dia de referência, -- o do servidor, faria quem está em outro fuso, ou quem estuda de
           -- madrugada, aparecer no dia errado para o professor.
           count(*) FILTER (
             WHERE a.sinalizado = false
@@ -206,8 +205,7 @@ export function criarRepositorioDeEstudo(sql: Executor) {
      * As palavras travadas da turma, agrupadas por palavra.
      *
      * A agregação acontece no banco. Trazer os agendamentos e agrupar em
-     * JavaScript funcionaria com uma turma e cairia com a escola inteira — e
-     * `array_agg` já devolve os nomes ordenados, sem consulta extra por palavra.
+     * JavaScript funcionaria com uma turma e cairia com a escola inteira, e * `array_agg` já devolve os nomes ordenados, sem consulta extra por palavra.
      */
     async palavrasTravadasDaTurma(turmaId: string): Promise<
       {

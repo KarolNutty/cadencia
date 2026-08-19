@@ -5,7 +5,7 @@ import { z } from 'zod';
  *
  * Um schema zod serve para três coisas ao mesmo tempo: validar a entrada na
  * API, tipar a resposta no cliente e gerar o tipo TypeScript. Uma fonte, três
- * usos — e, principalmente, sem o tipo poder divergir da validação, que é o
+ * usos, e, principalmente, sem o tipo poder divergir da validação, que é o
  * jeito mais comum de um contrato apodrecer.
  */
 
@@ -14,7 +14,7 @@ export const identificadorSchema = z.string().uuid({ message: 'Identificador inv
 /**
  * O mesmo formato usado pelo domínio: data de negócio, não instante.
  *
- * O regex sozinho não basta — `2026-02-31` passaria nele. O `refine` confere
+ * O regex sozinho não basta, `2026-02-31` passaria nele. O `refine` confere
  * contra o calendário de verdade.
  */
 export const diaDeEstudoSchema = z
@@ -23,7 +23,7 @@ export const diaDeEstudoSchema = z
   .refine((valor) => {
     // O `Number.isNaN` vem antes do `toISOString` de propósito: em data
     // inválida o `toISOString` LANÇA em vez de devolver algo comparável, e uma
-    // exceção aqui viraria 500 na API — o servidor quebrando por causa de
+    // exceção aqui viraria 500 na API, o servidor quebrando por causa de
     // entrada malformada, que é exatamente o que o validador existe para evitar.
     //
     // Pior ainda: o zod roda o refine mesmo quando o regex já falhou, então

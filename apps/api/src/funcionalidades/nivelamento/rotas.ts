@@ -1,14 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import { responderNivelamentoEntradaSchema } from '@cadencia/contrato';
 import { semPermissao } from '../../compartilhado/erros';
+import { idsDaRota } from '../../compartilhado/parametros';
 import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import type { ServicoDeNivelamento } from './servico';
 
 /**
  * Enquanto a plataforma atende uma escola de inglês, o idioma é fixo.
  *
- * Aceitá-lo pela URL agora seria inventar um parâmetro que nenhuma tela usa — e
- * abrir a porta para pedir um idioma que não existe. Quando houver mais de um,
+ * Aceitá-lo pela URL agora seria inventar um parâmetro que nenhuma tela usa, e * abrir a porta para pedir um idioma que não existe. Quando houver mais de um,
  * ele vem da turma do aluno, e não da requisição.
  */
 const IDIOMA = 'ingles';
@@ -45,7 +45,7 @@ export async function registrarRotasDeNivelamento(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId } = requisicao.params as { turmaId: string };
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
       return nivelamento.tentativasDaTurma(usuario.id, turmaId);
     },
   );

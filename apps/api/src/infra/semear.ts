@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { carregarAmbiente, carregarArquivoDeAmbiente } from '@cadencia/config';
 import { criarHashDeSenha } from '../funcionalidades/autenticacao/senha';
 import { conectar, type Banco } from './banco';
@@ -247,6 +248,159 @@ async function semear(sql: Banco): Promise<void> {
       `;
     }
 
+    /*
+     * Histórico de estudo, e não uma base zerada.
+     *
+     * Quem clona o repositório e roda vê o produto com vida, e não seis telas
+     * vazias explicando o que apareceria se alguém usasse. O estado vazio é a
+     * primeira impressão de todo mundo, e uma base sem dado nenhum esconde
+     * justamente o que o projeto faz.
+     *
+     * Os dias são contados para trás a partir de hoje, então a sequência de
+     * estudo e a frequência ficam corretas em qualquer data que se rode.
+     */
+    const cartoes = await transacao<{ id: string; ordem: number }[]>`
+      SELECT id, ordem FROM cartoes WHERE baralho_id = ${baralho!.id} ORDER BY ordem
+    `;
+
+    const hoje = new Date();
+    const diaAtras = (dias: number) => {
+      const data = new Date(hoje);
+      data.setUTCDate(data.getUTCDate() - dias);
+      return data.toISOString().slice(0, 10);
+    };
+
+    // Seis dias seguidos de estudo: a ofensiva aparece, e o ranking tem valor.
+    for (let dias = 5; dias >= 0; dias -= 1) {
+      const doDia = cartoes.slice((5 - dias) * 4, (5 - dias) * 4 + 4);
+
+      for (const cartao of doDia) {
+        await transacao`
+          INSERT INTO revisoes ${transacao({
+            aluno_id: aluna!.id,
+            cartao_id: cartao.id,
+            avaliacao: 'bom',
+            dia: diaAtras(dias),
+            intervalo_anterior: 0,
+            intervalo_novo: 3,
+            lote_id: randomUUID(),
+          })}
+        `;
+      }
+
+      await transacao`
+        INSERT INTO pontos_por_dia ${transacao({
+          aluno_id: aluna!.id,
+          turma_id: turma!.id,
+          dia: diaAtras(dias),
+          xp: 40,
+        })}
+        ON CONFLICT (aluno_id, turma_id, dia) DO UPDATE SET xp = EXCLUDED.xp
+      `;
+    }
+
+    // Quatro palavras travadas: é o que o painel do professor existe para
+    // mostrar, e sem elas a tela principal dele nasce vazia.
+    for (const cartao of cartoes.slice(0, 4)) {
+      await transacao`
+        INSERT INTO agendamentos ${transacao({
+          aluno_id: aluna!.id,
+          cartao_id: cartao.id,
+          intervalo_dias: 1,
+          facilidade: 1.3,
+          repeticoes: 0,
+          lapsos: 4 + (cartao.ordem % 3),
+          vence_em: diaAtras(0),
+          sinalizado: true,
+        })}
+        ON CONFLICT (aluno_id, cartao_id) DO UPDATE SET
+          sinalizado = true, lapsos = EXCLUDED.lapsos
+      `;
+    }
+
+    // Um punhado em dia, para o progresso não parecer que ela só erra.
+    for (const cartao of cartoes.slice(4, 16)) {
+      await transacao`
+        INSERT INTO agendamentos ${transacao({
+          aluno_id: aluna!.id,
+          cartao_id: cartao.id,
+          intervalo_dias: 8,
+          facilidade: 2.5,
+          repeticoes: 3,
+          lapsos: 0,
+          vence_em: diaAtras(-5),
+          sinalizado: false,
+        })}
+        ON CONFLICT (aluno_id, cartao_id) DO NOTHING
+      `;
+    }
+
+    // Duas aulas registradas, com presença e dever.
+    for (const [dias, conteudo, dever] of [
+      [
+        7,
+        'Past simple: verbos regulares e os irregulares mais comuns.',
+        'Exercícios 4 a 9, página 32.',
+      ],
+      [
+        2,
+        'Phrasal verbs do dia a dia: look for, give up, run out of.',
+        'Escrever cinco frases usando os verbos da aula.',
+      ],
+    ] as [number, string, string][]) {
+      const [aula] = await transacao<{ id: string }[]>`
+        INSERT INTO aulas ${transacao({
+          turma_id: turma!.id,
+          dia: diaAtras(dias),
+          conteudo,
+          dever,
+          encontro: null,
+        })}
+        RETURNING id
+      `;
+
+      await transacao`
+        INSERT INTO presencas ${transacao({
+          aula_id: aula!.id,
+          aluno_id: aluna!.id,
+          situacao: dias === 7 ? 'presente' : 'justificada',
+        })}
+      `;
+    }
+
+    // Um tema de redação com entrega e parecer, para as duas telas terem o quê
+    // mostrar sem depender de alguém escrever na hora.
+    const [tema] = await transacao<{ id: string }[]>`
+      INSERT INTO temas_de_redacao ${transacao({
+        turma_id: turma!.id,
+        titulo: 'Um dia inesquecível',
+        enunciado: 'Descreva um dia que você não esquece. Use o passado.',
+        nivel: 'B1',
+      })}
+      RETURNING id
+    `;
+
+    const TEXTO_DA_ALUNA = [
+      'Last year I traveled to Salvador with my family.',
+      'We arrived early in the morning and the weather was perfect.',
+      'I am agree that the beaches there are the best in Brazil.',
+      'We ate acarajé every day and my father made a question to a local woman',
+      'about the recipe. She laughed and told us the secret is the palm oil.',
+      'It was actually the best trip of my life.',
+    ].join(' ');
+
+    await transacao`
+      INSERT INTO redacoes ${transacao({
+        tema_id: tema!.id,
+        aluno_id: aluna!.id,
+        texto: TEXTO_DA_ALUNA,
+        palavras: TEXTO_DA_ALUNA.split(/\s+/).length,
+        analise: null,
+        provedor: null,
+        analisada_em: null,
+      })}
+    `;
+
     console.warn('');
     console.warn('  Turma criada com', VOCABULARIO.length, 'cartas.');
     console.warn('  Nivelamento com', PERGUNTAS.length, 'perguntas.');
@@ -255,6 +409,9 @@ async function semear(sql: Banco): Promise<void> {
     console.warn('  Professora: helena@escola.com.br');
     console.warn('  Senha:      ', SENHA);
     console.warn('  Turma:      ', turma!.id);
+    console.warn('');
+    console.warn('  A aluna já tem 6 dias de estudo, 4 palavras travadas,');
+    console.warn('  2 aulas registradas e uma redação entregue.');
     console.warn('');
     console.warn('  Entre no app com a aluna: o próprio app descobre a turma.');
     console.warn('');

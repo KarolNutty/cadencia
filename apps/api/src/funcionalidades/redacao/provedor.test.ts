@@ -6,6 +6,8 @@ import {
   interpretarResposta,
 } from './provedor';
 
+const MODELO = 'gemini-3.6-flash';
+
 describe('leitura da resposta do modelo', () => {
   it('lê JSON limpo', () => {
     const analise = interpretarResposta(
@@ -115,11 +117,11 @@ describe('provedor simulado', () => {
 describe('escolha do provedor', () => {
   it('sem chave, usa o simulado', () => {
     // O projeto roda por completo sem credencial: quem clona vê funcionando.
-    expect(escolherProvedor(undefined).nome).toBe('simulado');
+    expect(escolherProvedor(undefined, MODELO).nome).toBe('simulado');
   });
 
   it('com chave, usa o Gemini', () => {
-    expect(escolherProvedor('uma-chave').nome).toBe('gemini');
+    expect(escolherProvedor('uma-chave', MODELO).nome).toBe('gemini');
   });
 });
 
@@ -138,7 +140,7 @@ describe('provedor Gemini', () => {
         ),
     ) as unknown as typeof fetch;
 
-    await criarProvedorGemini('segredo', buscar).analisar({
+    await criarProvedorGemini('segredo', MODELO, buscar).analisar({
       texto: 'x',
       nivel: 'B1',
       tema: 'y',
@@ -159,7 +161,7 @@ describe('provedor Gemini', () => {
       new Response('erro', { status: 500 })) as unknown as typeof fetch;
 
     await expect(
-      criarProvedorGemini('chave', buscar).analisar({
+      criarProvedorGemini('chave', MODELO, buscar).analisar({
         texto: 'x',
         nivel: 'B1',
         tema: 'y',

@@ -10,7 +10,7 @@ import { construirServidor } from '../src/servidor';
  *
  * Roda contra o **Postgres de verdade**, o mesmo motor de produção, subido pelo
  * `docker compose`. Banco falso não pega constraint violada, índice único nem
- * transação que não fecha — e é exatamente aí que os bugs de persistência
+ * transação que não fecha, e é exatamente aí que os bugs de persistência
  * moram.
  */
 
@@ -20,7 +20,7 @@ let bancoCompartilhado: Banco | null = null;
 
 export function ambienteDeTeste() {
   // `obrigatorio` porque aqui o arquivo é a única fonte esperada. Sem ele, o
-  // erro seria "DATABASE_URL: Required" — que faz procurar problema de
+  // erro seria "DATABASE_URL: Required", que faz procurar problema de
   // configuração quando o que falta é copiar um arquivo.
   try {
     carregarArquivoDeAmbiente({ nome: '.env.teste', obrigatorio: true });

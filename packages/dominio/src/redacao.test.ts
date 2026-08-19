@@ -81,8 +81,7 @@ describe('verificação da análise', () => {
   it('marca como não encontrado o trecho inventado', () => {
     /**
      * Modelo de linguagem parafraseia sem perceber. Um apontamento que cita
-     * trecho inexistente faz o aluno procurar no próprio texto e não achar —
-     * e desconfiar do resto da correção.
+     * trecho inexistente faz o aluno procurar no próprio texto e não achar, * e desconfiar do resto da correção.
      */
     const verificados = verificarAnalise(
       analise(['I are agree']),

@@ -14,7 +14,7 @@ import type { ProvedorDeAnalise } from './provedor';
  * Correção de redação.
  *
  * A IA analisa, o código verifica, o professor avalia. Nenhuma das três etapas
- * substitui a outra — e a do meio existe porque modelo de linguagem cita
+ * substitui a outra, e a do meio existe porque modelo de linguagem cita
  * trechos que não estão no texto quando parafraseia sem perceber.
  */
 
@@ -88,7 +88,7 @@ export function criarServicoDeRedacao(sql: Banco, provedor: ProvedorDeAnalise) {
      *
      * A análise acontece **antes** de responder, e não numa fila. É uma escolha
      * consciente: o aluno acabou de escrever e espera o retorno agora. Numa
-     * escala maior isso vira trabalho assíncrono — e aí o texto é gravado
+     * escala maior isso vira trabalho assíncrono, e aí o texto é gravado
      * primeiro, e a análise chega depois.
      */
     async enviar(alunoId: string, temaId: string, texto: string) {
@@ -114,14 +114,13 @@ export function criarServicoDeRedacao(sql: Banco, provedor: ProvedorDeAnalise) {
         analise = await provedor.analisar({
           texto,
           nivel: tema.nivel,
-          tema: `${tema.titulo} — ${tema.enunciado}`,
+          tema: `${tema.titulo}, ${tema.enunciado}`,
           idioma: tema.idioma,
         });
         nomeDoProvedor = provedor.nome;
       } catch {
         // O texto é guardado mesmo sem análise. Perder a redação porque a IA
-        // caiu seria trocar o trabalho do aluno pela conveniência do sistema —
-        // e o professor ainda pode corrigir à mão.
+        // caiu seria trocar o trabalho do aluno pela conveniência do sistema, // e o professor ainda pode corrigir à mão.
         analise = null;
       }
 

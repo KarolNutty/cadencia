@@ -28,7 +28,7 @@ describe('hash', () => {
 
   it('gera hash diferente para a mesma senha', async () => {
     // O sal é aleatório por hash. Sem isso, duas pessoas com a mesma senha
-    // teriam o mesmo registro no banco — e uma tabela pronta quebraria as duas.
+    // teriam o mesmo registro no banco, e uma tabela pronta quebraria as duas.
     const [primeiro, segundo] = await Promise.all([
       criarHashDeSenha(SENHA),
       criarHashDeSenha(SENHA),
@@ -63,7 +63,7 @@ describe('política de senha', () => {
 
 describe('robustez', () => {
   it('hash corrompido devolve false em vez de estourar', async () => {
-    // Deixar a exceção subir viraria 500 — e um 500 diferente do 401 conta ao
+    // Deixar a exceção subir viraria 500, e um 500 diferente do 401 conta ao
     // atacante que aquele registro existe e está com problema.
     expect(await conferirSenha('não é um hash', SENHA)).toBe(false);
     expect(await conferirSenha('', SENHA)).toBe(false);

@@ -117,7 +117,7 @@ describe('errar', () => {
   });
 
   it('reduz a facilidade, mas nunca abaixo do piso', () => {
-    // Sem o piso, a carta cairia para "volta todo dia, para sempre" — e um
+    // Sem o piso, a carta cairia para "volta todo dia, para sempre", e um
     // punhado dessas domina toda sessão até o aluno desistir do app.
     let estado = agendamentoNovo(HOJE);
     for (let i = 0; i < 15; i += 1) {
@@ -185,7 +185,7 @@ describe('sinalizar para o professor', () => {
   });
 
   it('acertar depois não apaga o sinal', () => {
-    // Quem decide que a carta voltou ao normal é o professor, na aula — e não
+    // Quem decide que a carta voltou ao normal é o professor, na aula, e não
     // uma resposta certa isolada, que pode ser sorte.
     let estado = agendamentoNovo(HOJE);
     for (let i = 0; i < LAPSOS_PARA_SINALIZAR; i += 1) {
@@ -220,7 +220,7 @@ describe('reconstruir a partir do histórico', () => {
   it('reproduzir as revisões chega ao mesmo estado', () => {
     // O banco guarda o agendamento pronto porque "o que vence hoje" roda a cada
     // abertura do app. Mas as revisões são append-only, então o estado sempre
-    // pode ser recalculado — e se os dois divergirem, algo escreveu no
+    // pode ser recalculado, e se os dois divergirem, algo escreveu no
     // agendamento sem passar pela regra.
     const avaliacoes: Avaliacao[] = ['bom', 'errei', 'bom', 'facil', 'dificil', 'bom'];
 

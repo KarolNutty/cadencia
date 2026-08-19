@@ -53,7 +53,7 @@ export function criarExigirEntrada(emissor: Emissor) {
  * Exige um papel específico.
  *
  * Responde 403 porque não revela nada sobre um recurso: é o próprio perfil que
- * não permite a ação. Já o acesso a um recurso alheio responde 404 — ver
+ * não permite a ação. Já o acesso a um recurso alheio responde 404, ver
  * `naoEncontrado` em `erros.ts`.
  */
 export function exigirPapel(papel: Papel) {

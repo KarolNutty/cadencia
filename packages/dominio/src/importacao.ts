@@ -1,7 +1,7 @@
 /**
  * Cadastro de palavras em lote.
  *
- * Professor de idioma já tem a lista pronta — no caderno, num documento, numa
+ * Professor de idioma já tem a lista pronta, no caderno, num documento, numa
  * planilha. Obrigá-lo a digitar cinquenta palavras num formulário de duas
  * caixas por vez é o motivo mais comum de uma ferramenta boa não ser usada.
  *
@@ -34,10 +34,17 @@ export interface ResultadoDaImportacao {
  *
  * Tabulação primeiro porque é o que sai de planilha, e é o único que nunca
  * aparece dentro do próprio conteúdo. O ponto e vírgula vem antes da vírgula
- * porque "olá, tudo bem?" é uma tradução plausível — e quebrar essa linha na
+ * porque "olá, tudo bem?" é uma tradução plausível, e quebrar essa linha na
  * vírgula produziria lixo em silêncio.
  */
-const SEPARADORES = ['\t', ' — ', ' – ', ';', ' - ', '='] as const;
+/*
+ * O travessão está aqui como DADO, não como texto de interface.
+ *
+ * É o separador que professor de idioma usa na lista dele, e reconhecê-lo é
+ * requisito. A vírgula, de propósito, não entra: "olá, tudo bem?" é tradução
+ * plausível, e quebrar ali produziria lixo em silêncio.
+ */
+const SEPARADORES = ['\t', ' \u2014 ', ' \u2013 ', ';', ' - ', '='] as const;
 
 const TAMANHO_MAXIMO = 200;
 
@@ -87,7 +94,7 @@ export function lerLista(texto: string): ResultadoDaImportacao {
 
     // Linha vazia é separador visual da lista de alguém, não erro.
     if (!conteudo) return;
-    // Linha começada por # é comentário — quem organiza a lista por tema usa.
+    // Linha começada por # é comentário, quem organiza a lista por tema usa.
     if (conteudo.startsWith('#')) return;
 
     const partes = separar(conteudo);
@@ -136,9 +143,11 @@ export function lerLista(texto: string): ResultadoDaImportacao {
  * Explicar o formato em prosa custa um parágrafo que ninguém lê. O exemplo
  * mostra os três separadores funcionando e a dica opcional.
  */
-export const EXEMPLO_DE_LISTA = `though — embora — parece "through", mas não é
-to gather; reunir, juntar
-awkward = constrangedor
-
-# as linhas em branco e as que começam com # são ignoradas
-to afford — ter condições de pagar`;
+export const EXEMPLO_DE_LISTA = [
+  'though \u2014 embora \u2014 parece "through", mas não é',
+  'to gather; reunir, juntar',
+  'awkward = constrangedor',
+  '',
+  '# as linhas em branco e as que começam com # são ignoradas',
+  'to afford \u2014 ter condições de pagar',
+].join('\n');

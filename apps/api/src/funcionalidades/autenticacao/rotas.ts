@@ -5,6 +5,7 @@ import {
   entrarEntradaSchema,
   plataformaSchema,
 } from '@cadencia/contrato';
+import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import { naoAutenticado } from '../../compartilhado/erros';
 import { porEnderecoEConta } from '../../compartilhado/limite';
 import { VIDA_DA_RENOVACAO_EM_SEGUNDOS, VIDA_DO_ACESSO_EM_SEGUNDOS } from './tokens';
@@ -22,7 +23,7 @@ const COOKIE_DE_RENOVACAO = 'cadencia_renovacao';
  * | App | Corpo da resposta, e daí para o armazenamento seguro do sistema | Outro app ou quem pega o aparelho |
  *
  * A plataforma vem de um cabeçalho explícito. Adivinhar pelo `User-Agent`
- * erraria — e errar aqui significa ou o app sem token, ou o navegador com um
+ * erraria, e errar aqui significa ou o app sem token, ou o navegador com um
  * token legível por script.
  */
 function entregarSessao(
@@ -174,6 +175,21 @@ export async function registrarRotasDeAutenticacao(
   });
 
   app.get('/eu', { preHandler: app.exigirEntrada }, async (requisicao) => {
-    return { usuario: requisicao.usuario };
+    /*
+     * O usuário vem do banco, e não do token.
+     *
+     * O token carrega só `id` e `papel`, de propósito: nome e e-mail mudam, e
+     * um token que os carregue mostra o valor antigo até expirar. Devolver o
+     * conteúdo do token aqui entregava um usuário sem nome, e a tela que o
+     * exibe quebrava.
+     *
+     * Também é a única forma de uma conta removida deixar de ser aceita antes
+     * do token vencer.
+     */
+    const usuario = await autenticacao.buscarUsuario(usuarioDaRequisicao(requisicao).id);
+
+    if (!usuario) throw naoAutenticado('Esta conta não existe mais.');
+
+    return { usuario };
   });
 }

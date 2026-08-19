@@ -78,7 +78,7 @@ describe('assinatura', () => {
 
 describe('separação entre acesso e renovação', () => {
   /**
-   * São duas barreiras independentes, e vale testar cada uma sozinha — senão a
+   * São duas barreiras independentes, e vale testar cada uma sozinha, senão a
    * primeira mascara a segunda e ninguém percebe quando a segunda quebra.
    */
 
@@ -101,7 +101,7 @@ describe('separação entre acesso e renovação', () => {
 
   it('barreira 2 · mesmo com segredo reaproveitado, o tipo reprova', async () => {
     // O cenário que a barreira 2 cobre: alguém configura o mesmo segredo nos
-    // dois. A assinatura passa a conferir — e sem o campo "tipo" o servidor
+    // dois. A assinatura passa a conferir, e sem o campo "tipo" o servidor
     // aceitaria um token de renovação vazado como se fosse de acesso.
     //
     // `carregarAmbiente` recusa subir com segredos iguais, mas defesa em

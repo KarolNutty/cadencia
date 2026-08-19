@@ -1,20 +1,6 @@
-/*
- * Painel do professor — direção visual
- *
- * Vivo e colorido, na linguagem dos aplicativos de idioma: cor saturada em
- * bloco, formas gordas, tipografia pesada e botões que parecem ter espessura.
- *
- * A regra que mantém isso legível num painel de trabalho: **a cor é semântica,
- * nunca decorativa.** Cada tom significa um estado — travado, sumido, atrasado,
- * em dia — e nada recebe cor por ser bonito. Num produto para aluno a cor pode
- * animar; num painel que o professor abre com cinco minutos antes da aula, ela
- * precisa dizer para onde olhar.
- *
- * A assinatura é o **botão com espessura**: uma sombra sólida embaixo que some
- * ao apertar, como tecla de verdade. É o gesto que dá o tom do produto inteiro.
- */
-
 :root {
+  color-scheme: light;
+
   --violeta: #6b4eff;
   --violeta-escuro: #4c31d6;
   --violeta-claro: #efecff;
@@ -43,10 +29,92 @@
   --borda: #e4e4f2;
   --borda-forte: #d3d3e8;
 
+  /*
+   * A lateral é escura nos dois temas.
+   *
+   * Não é decoração: ela separa "onde estou" de "o que estou fazendo" sem
+   * precisar de linha divisória, e dá ao produto o peso de ferramenta de
+   * trabalho. Painel de escola fica aberto o dia inteiro na secretaria.
+   */
+  --lateral-fundo: #1b1b32;
+  --lateral-texto: #e8e8f5;
+  --lateral-apoio: #8f8fb0;
+  --lateral-linha: #2f2f4d;
+  --lateral-ativo: #2b2b4d;
+  --lateral-borda: rgba(255, 255, 255, 0.1);
+
+  --sombra: 0 1px 2px rgba(27, 27, 50, 0.04), 0 8px 24px rgba(27, 27, 50, 0.06);
+
   --letra: 'Nunito', system-ui, -apple-system, sans-serif;
 
   --canto: 16px;
   --canto-grande: 22px;
+}
+
+/*
+ * Modo escuro.
+ *
+ * Não é o claro invertido. Cor saturada sobre fundo escuro vibra e cansa a
+ * vista, então o violeta clareia e perde saturação. As bordas viram diferença
+ * de luminosidade, porque linha clara sobre fundo escuro chama mais atenção que
+ * o conteúdo.
+ *
+ * Um produto de estudo precisa disso mais que a média: a regra do dia que vira
+ * às 4h existe justamente porque tem gente estudando de madrugada, e forçar
+ * tela branca aí é o produto contradizendo a própria premissa.
+ */
+[data-tema='escuro'] {
+  color-scheme: dark;
+
+  --violeta: #9b8bff;
+  --violeta-escuro: #7a67e8;
+  --violeta-claro: #2a2650;
+
+  --coral: #ff7a63;
+  --coral-escuro: #ff9b88;
+  --coral-claro: #3a2320;
+
+  --ambar: #ffb84d;
+  --ambar-escuro: #ffc978;
+  --ambar-claro: #3a2f1c;
+
+  --azul: #6aa8ff;
+  --azul-claro: #1f2c44;
+
+  --menta: #3ed4a4;
+  --menta-escuro: #6ce0bd;
+  --menta-claro: #17332b;
+
+  --tinta: #eceaf6;
+  --tinta-media: #a8a6c2;
+  --tinta-fraca: #74728f;
+
+  --fundo: #14141f;
+  --branco: #1d1d2c;
+  --borda: #2c2c40;
+  --borda-forte: #3a3a52;
+
+  /*
+   * A lateral é mais clara que a página, e não mais escura.
+   *
+   * Em tema escuro, elevação se expressa clareando a superfície: sombra não
+   * aparece sobre fundo escuro. Uma gaveta mais escura que a página some no
+   * fundo e parece terminar onde o conteúdo dela acaba.
+   *
+   * Clarear resolve pela metade. A razão de contraste entre duas superfícies
+   * escuras satura em torno de 1,4 por mais que se afaste os tons, e continuar
+   * clareando deixaria a lateral lavada. Por isso a separação vem também de uma
+   * LINHA, que é o que interfaces escuras de verdade usam: ela tem contraste
+   * próprio contra os dois lados.
+   */
+  --lateral-fundo: #23233a;
+  --lateral-texto: #eceaf6;
+  --lateral-apoio: #8f8dad;
+  --lateral-linha: #3a3a56;
+  --lateral-ativo: #303049;
+  --lateral-borda: rgba(255, 255, 255, 0.14);
+
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -56,6 +124,10 @@
 body {
   margin: 0;
   background: var(--fundo);
+  transition: background 160ms;
+  /* Endereço de e-mail e palavra composta não têm espaço para quebrar, e
+     furam o cartão em tela estreita se não forem autorizados a partir. */
+  overflow-wrap: break-word;
   color: var(--tinta);
   font-family: var(--letra);
   font-weight: 600;
@@ -81,7 +153,7 @@ ul {
 }
 
 /* ==========================================================================
-   Botões com espessura — a assinatura
+   Botões com espessura, a assinatura
    ========================================================================== */
 
 .botao {
@@ -116,6 +188,23 @@ ul {
   color: #8c8ca8;
   box-shadow: 0 4px 0 #bfbfd8;
   cursor: not-allowed;
+}
+
+/* Botão de largura confortável, que ainda cede em tela estreita. */
+.botao--medida {
+  max-width: min(340px, 100%);
+}
+
+.botao--centrado {
+  margin-inline: auto;
+}
+
+.campo--espacado {
+  margin-top: 14px;
+}
+
+.linha-de-campos--espacada {
+  margin-top: 14px;
 }
 
 .botao--pequeno {
@@ -175,15 +264,95 @@ ul {
   min-height: 100vh;
 }
 
-@media (max-width: 900px) {
-  .painel {
-    grid-template-columns: 1fr;
-  }
+/* ------------------------------------------------------- barra superior */
+
+/*
+ * Só existe em tela estreita, onde a lateral está recolhida.
+ *
+ * Ela carrega a informação que a lateral dava e a gaveta fechada não pode dar:
+ * em que seção a pessoa está e de qual turma.
+ */
+.barra {
+  display: none;
 }
 
-.lateral {
+.barra__menu {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
   background: var(--branco);
-  border-right: 2px solid var(--borda);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.barra__tracos,
+.barra__tracos::before,
+.barra__tracos::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--tinta);
+}
+
+.barra__tracos {
+  position: relative;
+}
+
+.barra__tracos::before,
+.barra__tracos::after {
+  content: '';
+  position: absolute;
+  left: 0;
+}
+
+.barra__tracos::before {
+  top: -6px;
+}
+
+.barra__tracos::after {
+  top: 6px;
+}
+
+.barra__onde {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.barra__secao {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barra__turma {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--tinta-fraca);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cortina {
+  display: none;
+}
+
+/* ------------------------------------------------------------- lateral */
+
+.lateral {
+  background: var(--lateral-fundo);
+  color: var(--lateral-texto);
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
@@ -193,40 +362,70 @@ ul {
   height: 100vh;
 }
 
-@media (max-width: 900px) {
-  .lateral {
-    position: static;
-    height: auto;
-    border-right: none;
-    border-bottom: 2px solid var(--borda);
-  }
+.lateral:focus {
+  outline: none;
 }
 
-.lateral__marca {
+.lateral__topo {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .lateral__nome {
+  display: block;
   font-size: 23px;
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: var(--violeta);
+  color: var(--lateral-texto);
 }
 
 .lateral__papel {
+  display: block;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--tinta-fraca);
-  display: block;
+  color: var(--lateral-apoio);
+}
+
+.lateral__fechar {
+  display: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  font-size: 16px;
+  color: var(--lateral-apoio);
+  background: none;
+  border: none;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.lateral__fechar:hover {
+  background: var(--lateral-ativo);
+  color: var(--lateral-texto);
+}
+
+.lateral .escolha__rotulo {
+  color: var(--lateral-apoio);
+}
+
+.lateral .escolha__gatilho {
+  background: var(--lateral-ativo);
+  border-color: var(--lateral-linha);
+  color: var(--lateral-texto);
+}
+
+.lateral .escolha__gatilho:hover {
+  border-color: var(--violeta);
 }
 
 .menu {
   list-style: none;
   padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -237,25 +436,45 @@ ul {
   width: 100%;
   text-align: left;
   background: none;
-  border: 2px solid transparent;
-  border-radius: 14px;
-  padding: 11px 13px;
+  border: none;
+  border-radius: 12px;
+  /* O recuo abre espaço para a faixa da seção ativa sem que o texto dance
+     quando ela aparece. */
+  padding: 11px 13px 11px 17px;
   display: flex;
   flex-direction: column;
   gap: 1px;
-  color: var(--tinta-media);
+  color: var(--lateral-apoio);
+  position: relative;
 }
 
 .menu__item:hover {
-  background: var(--fundo);
+  background: var(--lateral-ativo);
+  color: var(--lateral-texto);
 }
 
-/* A seção ativa recebe cor cheia e contorno: presença, não sublinhado. */
+/*
+ * A seção ativa recebe três sinais: faixa, fundo e peso do texto.
+ *
+ * Parece redundante e não é. A faixa sozinha some para quem tem dificuldade de
+ * distinguir cor, e o fundo sozinho fica fraco demais sobre escuro. Saber onde
+ * se está é a informação mais básica de uma navegação.
+ */
 .menu__item--ativo,
 .menu__item--ativo:hover {
-  background: var(--violeta-claro);
-  border-color: var(--violeta);
-  color: var(--violeta);
+  background: var(--lateral-ativo);
+  color: var(--lateral-texto);
+}
+
+.menu__item--ativo::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 9px;
+  bottom: 9px;
+  width: 4px;
+  border-radius: 3px;
+  background: var(--violeta);
 }
 
 .menu__rotulo {
@@ -266,34 +485,189 @@ ul {
 .menu__descricao {
   font-size: 12px;
   font-weight: 600;
-  color: var(--tinta-fraca);
+  color: var(--lateral-apoio);
 }
 
 .menu__item--ativo .menu__descricao {
   color: var(--violeta);
-  opacity: 0.75;
+}
+
+.lateral__tema {
+  display: flex;
+  justify-content: center;
 }
 
 .lateral__rodape {
-  border-top: 2px solid var(--borda);
+  border-top: 1px solid var(--lateral-linha);
   padding-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .lateral__quem {
+  flex: 1;
+  min-width: 0;
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--tinta-media);
-  margin-bottom: 4px;
+  color: var(--lateral-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discreto--lateral {
+  color: var(--lateral-apoio);
+}
+
+.discreto--lateral:hover {
+  background: var(--lateral-ativo);
+  color: var(--lateral-texto);
+}
+
+/* ==========================================================================
+   Tela estreita: a lateral vira gaveta
+   ========================================================================== */
+
+/*
+ * Recolher em vez de empilhar.
+ *
+ * Empilhar a navegação acima do conteúdo obrigaria a rolar por seis itens de
+ * menu toda vez que alguém abre o portal no celular, antes de ver qualquer
+ * coisa útil.
+ */
+@media (max-width: 900px) {
+  .painel {
+    /*
+     * `minmax(0, 1fr)`, e não `1fr`.
+     *
+     * `1fr` equivale a `minmax(auto, 1fr)`, e `auto` nunca encolhe abaixo do
+     * conteúdo. Uma tabela larga ou um botão de texto comprido empurram a
+     * coluna e a página inteira ganha rolagem horizontal, em vez de o conteúdo
+     * se ajustar.
+     */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .barra {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    /*
+     * Altura mínima, e não só padding.
+     *
+     * A barra tem duas linhas de texto ao lado de um avatar de 32px. Com
+     * padding sozinho, o conteúdo passa da caixa e o nome da turma é cortado
+     * pela borda de baixo.
+     */
+    min-height: 64px;
+    padding: 10px 16px;
+
+    /*
+     * O recorte do topo em celular com entalhe.
+     *
+     * `env(safe-area-inset-top)` vale zero em aparelho sem entalhe, e o `max`
+     * garante o respiro normal nesse caso. Sem isso, a barra fica atrás do
+     * relógio e da câmera nos aparelhos que têm.
+     */
+    padding-top: max(10px, env(safe-area-inset-top));
+
+    background: var(--branco);
+    border-bottom: 1px solid var(--borda);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+
+  .lateral {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: min(300px, 86vw);
+    /* `dvh` acompanha a barra do navegador que aparece e some ao rolar; `vh`
+       fixo deixaria o rodapé da gaveta atrás dela. */
+    height: 100dvh;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .lateral--aberta {
+    transform: translateX(0);
+  }
+
+  .lateral {
+    border-right: 1px solid var(--lateral-borda);
+    box-shadow: 6px 0 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .lateral__fechar {
+    display: grid;
+  }
+
+  .cortina {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    /* Escura o bastante para o conteúdo de trás recuar de verdade. Cortina
+       fraca deixa a página competindo com a gaveta pela atenção. */
+    background: rgba(6, 6, 12, 0.72);
+    cursor: pointer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lateral {
+    transition: none;
+  }
 }
 
 .conteudo {
-  padding: 36px 40px 96px;
-  max-width: 1060px;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 36px 44px 96px;
+  min-width: 0;
+
+  /*
+   * O espaçamento entre blocos vem daqui, e não de margem em cada um.
+   *
+   * Com `.bloco + .bloco { margin-top }`, dois blocos vizinhos se separam mas
+   * um bloco depois de uma grade, ou de um aviso, ou de um estado vazio, cola.
+   * Cada tela nova reintroduz o problema num arranjo diferente, e a correção
+   * vira uma margem avulsa por caso.
+   *
+   * Uma coluna com espaço entre filhos resolve a classe inteira: tudo que for
+   * irmão direto aqui fica separado, seja o que for.
+   */
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: stretch;
 }
 
 @media (max-width: 700px) {
   .conteudo {
-    padding: 24px 18px 64px;
+    padding: 22px 16px 64px;
+    gap: 16px;
+  }
+
+  /* O cabeçalho empilha: título e ação lado a lado espremem os dois. */
+  .cabecalho {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .cabecalho__titulo {
+    font-size: clamp(24px, 7vw, 30px);
   }
 }
 
@@ -307,7 +681,8 @@ ul {
   align-items: flex-end;
   gap: 20px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
+  /* Só o respiro extra: o espaço base já vem do gap da coluna. */
+  margin-bottom: 10px;
 }
 
 .olho {
@@ -337,7 +712,8 @@ ul {
   color: var(--tinta-media);
   line-height: 1.55;
   margin-top: 10px;
-  max-width: 56ch;
+  /* Medida de leitura: a caixa pode ser larga, o texto corrido não. */
+  max-width: 62ch;
 }
 
 /* ==========================================================================
@@ -346,13 +722,10 @@ ul {
 
 .bloco {
   background: var(--branco);
-  border: 2px solid var(--borda);
+  border: 1px solid var(--borda);
   border-radius: var(--canto-grande);
   padding: 22px;
-}
-
-.bloco + .bloco {
-  margin-top: 18px;
+  box-shadow: var(--sombra);
 }
 
 .bloco__titulo {
@@ -366,19 +739,40 @@ ul {
 
 .duas-colunas {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
-  gap: 26px;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 28px;
   align-items: start;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1040px) {
   .duas-colunas {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
+/*
+ * Grade que se ajusta sozinha.
+ *
+ * Em tela larga os blocos ficam lado a lado em vez de empilhados numa coluna
+ * estreita com metade da tela vazia. O mínimo de 280px garante que eles voltem
+ * a empilhar antes de ficarem apertados demais para ler.
+ */
+.grade {
+  display: grid;
+  /*
+   * `min(300px, 100%)` no lugar de `300px`.
+   *
+   * Com o mínimo fixo, uma tela de 320px recebe uma coluna de 300px mais o
+   * respiro lateral, e o total passa da largura disponível. O `min` faz o
+   * mínimo virar a largura da tela quando ela é menor que ele.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
 /* ==========================================================================
-   Palavras travadas — os cartões
+   Palavras travadas, os cartões
    ========================================================================== */
 
 .verbetes {
@@ -399,10 +793,11 @@ ul {
 .verbete {
   background: var(--branco);
   border: 2px solid var(--borda);
+  box-shadow: var(--sombra);
   border-radius: var(--canto-grande);
   padding: 20px 22px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 18px;
   align-items: start;
 }
@@ -496,6 +891,7 @@ ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   background: var(--branco);
   border: 2px solid var(--borda);
@@ -565,9 +961,29 @@ ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  /*
+   * Quebra quando não cabe.
+   *
+   * Sem isto, nome longo e botões na mesma linha transbordam para fora do
+   * cartão, e a pessoa perde o botão em vez de vê-lo abaixo.
+   */
+  flex-wrap: wrap;
+  gap: 10px 14px;
   padding: 14px 0;
   border-bottom: 2px solid var(--borda);
+}
+
+/*
+ * O conteúdo principal da linha pode encolher; os controles ao lado, não.
+ *
+ * Mira o primeiro filho por posição, e por isso exclui o avatar
+ * explicitamente: um avatar em primeiro lugar receberia permissão para crescer
+ * e viraria elipse, que é exatamente o defeito que essa forma de seletor já
+ * causou uma vez neste arquivo.
+ */
+.lista__item > *:first-child:not(.avatar) {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .lista__item:last-child {
@@ -631,9 +1047,26 @@ ul {
 }
 
 .linha-de-campos .campo {
-  flex: 1;
-  min-width: 190px;
+  flex: 1 1 min(190px, 100%);
+  min-width: 0;
   margin-bottom: 0;
+}
+
+/*
+ * Campos que ocupam menos: nível, idioma, nota.
+ *
+ * `flex: 0 1` em vez de `0 0`: eles têm largura preferida, mas cedem quando a
+ * linha não comporta. Com `0 0` eles se recusam a encolher e empurram o resto
+ * para fora da tela.
+ */
+.linha-de-campos__estreito {
+  flex: 0 1 min(150px, 100%);
+  min-width: 0;
+}
+
+.linha-de-campos__medio {
+  flex: 1 1 min(220px, 100%);
+  min-width: 0;
 }
 
 .area {
@@ -679,6 +1112,12 @@ ul {
   font-size: 14.5px;
   font-weight: 700;
   line-height: 1.55;
+}
+
+/* Dentro de um bloco, o retorno precisa da própria margem: ali não há coluna
+   com espaçamento, e ele viria colado no campo acima. */
+.bloco > .retorno,
+.campo + .retorno {
   margin-top: 16px;
 }
 
@@ -714,7 +1153,7 @@ ul {
 }
 
 /* ==========================================================================
-   Portal de entrada — o painel que desliza
+   Portal de entrada, o painel que desliza
    ========================================================================== */
 
 .portal {
@@ -723,6 +1162,21 @@ ul {
   place-items: center;
   padding: 24px;
   background: linear-gradient(135deg, #ede9ff 0%, var(--fundo) 55%, #e4f6ef 100%);
+}
+
+/*
+ * No tema escuro o fundo perde o degradê claro.
+ *
+ * Degradê pastel atrás de um cartão escuro produz o contraste invertido: o
+ * fundo puxa mais atenção que o formulário, que é o oposto do que uma tela de
+ * entrada precisa.
+ */
+[data-tema='escuro'] .portal {
+  background: radial-gradient(120% 90% at 70% 10%, #221f3d 0%, var(--fundo) 55%);
+}
+
+[data-tema='escuro'] .portal__capa-interna {
+  background: linear-gradient(150deg, #5b3fd6 0%, #4c33c2 50%, #37299e 100%);
 }
 
 .portal__caixa {
@@ -812,7 +1266,17 @@ ul {
   left: -100%;
   width: 200%;
   height: 100%;
-  background: linear-gradient(135deg, var(--violeta) 0%, #8f6bff 48%, var(--menta) 130%);
+  /*
+   * O degradê escurece do começo ao fim, sem clarear no meio.
+   *
+   * Na versão anterior o centro subia para #8b5cf6, e ali o texto branco caía
+   * para 4,23 de contraste, abaixo do mínimo de 4,5 da WCAG. Um degradê que
+   * clareia no meio parece mais bonito isolado e cria um ponto cego para quem
+   * está lendo.
+   *
+   * Assim o pior ponto fica em 5,05.
+   */
+  background: linear-gradient(150deg, #6b4eff 0%, #5b3fe0 50%, #4331c4 100%);
   transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
   transform: translateX(0);
 }
@@ -828,10 +1292,22 @@ ul {
   height: 100%;
   display: grid;
   align-content: center;
-  justify-items: start;
+  /* Centralizado: o bloco de texto é a única coisa deste lado, e alinhado à
+     esquerda ele fica solto no painel. */
+  justify-items: center;
+  text-align: center;
   gap: 14px;
   padding: 0 44px;
-  color: var(--branco);
+
+  /*
+   * Branco literal, e não `var(--branco)`.
+   *
+   * A variável significa "a cor de superfície", e no tema escuro ela resolve
+   * para `#1d1d2c`. Sobre o painel violeta isso dava 2,51 de contraste, contra
+   * o mínimo de 4,5. Aqui o fundo é sempre colorido, nos dois temas, então a
+   * cor do texto também é fixa.
+   */
+  color: #fff;
   transition: transform 520ms cubic-bezier(0.72, 0, 0.24, 1);
 }
 
@@ -866,7 +1342,9 @@ ul {
   font-size: 15px;
   font-weight: 600;
   line-height: 1.6;
-  opacity: 0.92;
+  /* 0.96, e não 0.92: a 92% o contraste cai para 4,39 no ponto mais claro do
+     degradê, e o mínimo é 4,5. Passar por um triz não é passar. */
+  opacity: 0.96;
   max-width: 30ch;
 }
 
@@ -926,8 +1404,7 @@ ul {
 /*
  * Em tela estreita a capa some.
  *
- * Cobrir metade de um celular deixaria o formulário sem espaço para respirar —
- * a animação é bonita numa tela larga e atrapalha numa estreita.
+ * Cobrir metade de um celular deixaria o formulário sem espaço para respirar, * a animação é bonita numa tela larga e atrapalha numa estreita.
  */
 @media (max-width: 780px) {
   .portal__caixa {
@@ -945,18 +1422,26 @@ ul {
     padding: 34px 28px;
   }
 
+  /*
+   * Em tela estreita, um formulário por vez.
+   *
+   * Sem a capa deslizante, os dois ocupariam a coluna inteira empilhados, e o
+   * cartão ficaria com o dobro da altura e um vazio embaixo do que está em uso.
+   */
   .portal__forma--criar,
   .portal__caixa--criando .portal__forma--entrar {
     display: none;
   }
 
+  .portal__caixa--criando .portal__forma--criar {
+    display: grid;
+  }
+
+  .portal__forma,
   .portal__caixa--criando .portal__forma--criar,
   .portal__caixa--criando .portal__forma--entrar {
     transform: none;
-  }
-
-  .portal__caixa--criando .portal__forma--criar {
-    display: grid;
+    opacity: 1;
   }
 
   .portal__troca {
@@ -991,16 +1476,13 @@ ul {
   .botao {
     transition: none;
   }
-  .portal__capa,
-  .portal__capa-interna,
-  .portal__lado,
-  .portal__forma {
+  .portal__capa.portal__capa-interna.portal__lado.portal__forma {
     transition: none;
   }
 }
 
 /* ==========================================================================
-   Escolha — o seletor próprio
+   Escolha, o seletor próprio
    ========================================================================== */
 
 .escolha {
@@ -1015,6 +1497,20 @@ ul {
   text-transform: uppercase;
   color: var(--tinta-fraca);
   margin-bottom: 6px;
+}
+
+.lateral .escolha__rotulo {
+  color: var(--lateral-apoio);
+}
+
+.lateral .escolha__gatilho {
+  background: var(--lateral-ativo);
+  border-color: var(--lateral-linha);
+  color: var(--lateral-texto);
+}
+
+.lateral .escolha__gatilho:hover {
+  border-color: var(--violeta);
 }
 
 .escolha__gatilho {
@@ -1109,7 +1605,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 26px;
-  max-width: 620px;
+  max-width: min(620px, 100%);
 }
 
 .estudo__topo {
@@ -1122,7 +1618,7 @@ ul {
  * As batidas: uma marca por carta.
  *
  * Uma barra contínua diz "falta mais ou menos isso". As marcas dizem exatamente
- * quantas faltam — e são mais altas que largas, senão viram linha pontilhada e
+ * quantas faltam, e são mais altas que largas, senão viram linha pontilhada e
  * deixam de parecer marcação de compasso.
  */
 .batidas {
@@ -1199,13 +1695,15 @@ ul {
 
 .avaliacoes {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* `minmax(0, 1fr)` para o rótulo não empurrar a coluna: "Difícil" numa tela
+     de 320px cabe, mas só se a coluna puder ficar menor que o texto. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
 @media (max-width: 560px) {
   .avaliacoes {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1249,12 +1747,13 @@ ul {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 22px;
 }
 
 .ficha {
-  flex: 1;
-  min-width: 130px;
+  /* Cede quando a linha não comporta, em vez de empurrar as vizinhas para
+     fora do cartão. */
+  flex: 1 1 min(130px, 100%);
+  min-width: 0;
   background: var(--branco);
   border: 2px solid var(--borda);
   border-radius: var(--canto);
@@ -1357,8 +1856,7 @@ ul {
    ========================================================================== */
 
 .nivel {
-  max-width: 620px;
-  margin-top: 22px;
+  max-width: min(620px, 100%);
   background: var(--branco);
   border: 2px solid var(--borda);
   border-radius: var(--canto);
@@ -1378,7 +1876,7 @@ ul {
   list-style: none;
   padding: 0;
   margin: 0;
-  max-width: 620px;
+  max-width: min(620px, 100%);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1398,7 +1896,7 @@ ul {
  * A própria linha recebe destaque.
  *
  * Numa turma de trinta, achar o próprio nome na lista custa mais atenção do que
- * a informação vale — e o ranking existe para a pessoa se localizar.
+ * a informação vale, e o ranking existe para a pessoa se localizar.
  */
 .ranking__linha--eu {
   border-color: var(--violeta);
@@ -1470,11 +1968,11 @@ ul {
 .apontamentos {
   list-style: none;
   padding: 0;
-  margin: 18px 0 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 680px;
+  max-width: min(680px, 100%);
 }
 
 .apontamento {
@@ -1542,8 +2040,7 @@ ul {
 
 /* As observações não localizadas ficam recolhidas, mas acessíveis. */
 .duvidosos {
-  max-width: 680px;
-  margin-top: 20px;
+  max-width: min(680px, 100%);
 }
 
 .duvidosos summary {
@@ -1559,12 +2056,357 @@ ul {
 }
 
 .parecer {
-  max-width: 680px;
+  max-width: min(680px, 100%);
   background: var(--violeta-claro);
   border: 2px solid var(--violeta);
   border-radius: var(--canto-grande);
   padding: 20px 22px;
-  margin-bottom: 20px;
+}
+
+.parecer__texto {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.parecer__nota {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--violeta);
+  margin-top: 12px;
+}
+
+/* ==========================================================================
+   Conversação
+   ========================================================================== */
+
+/*
+ * O cabeçalho da sala é compacto.
+ *
+ * A tela tem altura fixa, então cada linha aqui é uma linha a menos de
+ * conversa visível. O título e o nível bastam; o resto do contexto está nas
+ * próprias mensagens.
+ */
+.sala__topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: min(760px, 100%);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.sala__cenario {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.sala__aviso {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ambar-escuro);
+  background: var(--ambar-claro);
+  padding: 5px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/*
+ * A conversa ocupa a altura disponível, e não o fluxo da página.
+ *
+ * Com as mensagens no fluxo normal, o campo de escrever fica solto no meio da
+ * tela quando há poucas falas, e desce para fora dela quando há muitas. Numa
+ * sala de conversa o campo está sempre no mesmo lugar: embaixo.
+ *
+ * O `min-height: 0` no meio é o que permite a coluna de mensagens encolher e
+ * rolar. Sem ele, um filho com `overflow` dentro de um flex se recusa a ficar
+ * menor que o conteúdo, e a rolagem vai parar na página inteira.
+ */
+/*
+ * A sala ocupa o que sobra, e não uma altura calculada.
+ *
+ * `calc(100vh - 200px)` exige adivinhar quanto o cabeçalho ocupa, e o número
+ * erra assim que o título quebra em duas linhas ou a barra do celular aparece.
+ * Quando erra para mais, a página inteira ganha rolagem e o cabeçalho sobe
+ * junto com a conversa.
+ *
+ * `flex: 1` com `min-height: 0` resolve sem número nenhum: a sala fica com o
+ * espaço que restou, seja ele qual for.
+ */
+.sala {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-width: min(760px, 100%);
+  margin-inline: auto;
+  width: 100%;
+}
+
+.sala__mensagens {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 4px 20px;
+}
+
+/*
+ * As primeiras mensagens ficam embaixo, e não no topo.
+ *
+ * Numa conversa começando, alinhar ao topo deixa um vazio grande abaixo da
+ * última fala, bem onde o olho espera a próxima. `margin-top: auto` no
+ * primeiro item empurra tudo para baixo enquanto sobra espaço, e deixa de ter
+ * efeito quando a conversa cresce.
+ */
+.sala__mensagens > :first-child {
+  margin-top: auto;
+}
+
+.fala {
+  max-width: 78%;
+  padding: 14px 18px;
+  border-radius: var(--canto-grande);
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* O aluno à direita, o parceiro à esquerda: é a convenção de qualquer
+   aplicativo de mensagem, e inverter obrigaria a ler o rótulo para saber quem
+   falou. */
+.fala--aluno {
+  align-self: flex-end;
+  background: var(--violeta);
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+[data-tema='escuro'] .fala--aluno {
+  color: var(--fundo);
+}
+
+.fala--assistente {
+  align-self: flex-start;
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra);
+  border-bottom-left-radius: 6px;
+}
+
+.fala__texto {
+  white-space: pre-wrap;
+}
+
+/* As correções ficam presas à fala, e fora do fio da conversa. */
+.fala__correcoes {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.fala__correcoes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fala--pensando {
+  display: flex;
+  gap: 5px;
+  padding: 18px;
+}
+
+.ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tinta-fraca);
+  animation: pulsar 1.1s ease-in-out infinite;
+}
+
+.ponto:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.ponto:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes pulsar {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ponto {
+    animation: none;
+    opacity: 0.55;
+  }
+}
+
+/*
+ * O campo de escrever fica preso ao rodapé da sala.
+ *
+ * A borda superior separa da última mensagem quando a conversa rola por baixo
+ * dele, e o fundo opaco impede o texto passar por trás.
+ */
+.escrever {
+  display: flex;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borda);
+  background: var(--fundo);
+}
+
+.escrever .campo__entrada {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .fala {
+    max-width: 88%;
+  }
+}
+
+/* ==========================================================================
+   Redação
+   ========================================================================== */
+
+.escrita__rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.texto-do-aluno {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: var(--tinta);
+}
+
+.apontamentos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: min(680px, 100%);
+}
+
+.apontamento {
+  background: var(--branco);
+  border: 2px solid var(--borda);
+  border-radius: var(--canto);
+  padding: 16px 18px;
+}
+
+.apontamento__criterio {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--violeta);
+  background: var(--violeta-claro);
+  padding: 4px 9px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+}
+
+/*
+ * O erro e a correção lado a lado.
+ *
+ * Mostrar só a forma certa não ensina: o aluno precisa reconhecer o que ele
+ * escreveu para lembrar na próxima vez.
+ */
+.apontamento__troca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.apontamento__antes {
+  color: var(--coral-escuro);
+  background: var(--coral-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.apontamento__seta {
+  color: var(--tinta-fraca);
+}
+
+.apontamento__depois {
+  color: var(--menta-escuro);
+  background: var(--menta-claro);
+  padding: 3px 8px;
+  border-radius: 7px;
+}
+
+.apontamento__explicacao {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.55;
+  margin-top: 10px;
+}
+
+/* As observações não localizadas ficam recolhidas, mas acessíveis. */
+.duvidosos {
+  max-width: min(680px, 100%);
+}
+
+.duvidosos summary {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tinta-fraca);
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.duvidosos summary:hover {
+  color: var(--tinta-media);
+}
+
+.parecer {
+  max-width: min(680px, 100%);
+  background: var(--violeta-claro);
+  border: 2px solid var(--violeta);
+  border-radius: var(--canto-grande);
+  padding: 20px 22px;
 }
 
 .parecer__texto {
@@ -1589,8 +2431,7 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 680px;
-  margin-bottom: 20px;
+  max-width: min(680px, 100%);
 }
 
 .fala {
@@ -1689,9 +2530,451 @@ ul {
 .escrever {
   display: flex;
   gap: 10px;
-  max-width: 680px;
+  max-width: min(680px, 100%);
 }
 
 .escrever .campo__entrada {
   flex: 1;
+}
+
+/* ==========================================================================
+   Chamada
+   ========================================================================== */
+
+.chamada__opcoes {
+  display: flex;
+  gap: 4px;
+  background: var(--fundo);
+  border: 2px solid var(--borda);
+  border-radius: 12px;
+  padding: 3px;
+}
+
+.chamada__opcao {
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--tinta-fraca);
+  background: none;
+  border: none;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.chamada__opcao:hover {
+  color: var(--tinta);
+}
+
+/* A opção marcada recebe cor cheia: numa lista de trinta linhas, a diferença
+   precisa ser visível de relance, não lida uma a uma. */
+.chamada__opcao--presente {
+  color: var(--branco);
+  background: var(--menta);
+}
+
+.chamada__opcao--ausente {
+  color: var(--branco);
+  background: var(--coral);
+}
+
+.chamada__opcao--justificada {
+  color: var(--branco);
+  background: var(--ambar);
+}
+
+@media (max-width: 620px) {
+  .chamada__opcoes {
+    flex-wrap: wrap;
+  }
+}
+
+/* ==========================================================================
+   Tema e avatares
+   ========================================================================== */
+
+.tema {
+  display: flex;
+  gap: 2px;
+  background: var(--lateral-ativo);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.tema__opcao {
+  width: 28px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--lateral-apoio);
+  background: none;
+  border: none;
+  border-radius: 8px;
+}
+
+.tema__opcao:hover {
+  color: var(--lateral-texto);
+}
+
+.tema__opcao--ativa {
+  color: var(--branco);
+  background: var(--violeta);
+}
+
+[data-tema='escuro'] .tema__opcao--ativa {
+  color: var(--fundo);
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+
+  /*
+   * O círculo mantém o tamanho que recebeu, e nada mais.
+   *
+   * `flex: none` é o que resolve, e a razão é sutil: um filho de flex tem
+   * `flex-shrink: 1` e `flex-basis: auto` por padrão, então ele encolhe quando
+   * falta espaço **e cresce quando a base não bate com o conteúdo**. Foi o
+   * crescer que produziu a elipse, não o encolher.
+   *
+   * `aspect-ratio` piora nesse caso: com a largura já esticada pelo flex, ele
+   * estica a altura junto e aumenta a elipse em vez de corrigi-la.
+   */
+  flex: none;
+  align-self: center;
+  line-height: 1;
+  overflow: hidden;
+}
+
+[data-tema='escuro'] .avatar {
+  color: var(--fundo);
+}
+
+.com-avatar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lateral__tema {
+  display: flex;
+  justify-content: center;
+}
+
+.discreto--lateral {
+  color: var(--lateral-apoio);
+}
+
+.discreto--lateral:hover {
+  background: var(--lateral-ativo);
+  color: var(--lateral-texto);
+}
+
+/* O nome com avatar precisa alinhar as duas linhas de texto ao lado do círculo. */
+.turma__nome.com-avatar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/*
+ * O texto ao lado do avatar, nomeado.
+ *
+ * A regra anterior era `.turma__nome.com-avatar > span`, e o avatar também é um
+ * `span`: ele recebia `flex: 1` e crescia, virando elipse. Pior, o seletor
+ * vencia o `flex: none` do próprio avatar por especificidade, então a correção
+ * lá não tinha efeito nenhum.
+ *
+ * Seletor por posição atinge o que não devia assim que o conteúdo muda. Um
+ * nome resolve, e ainda diz o que a regra é para.
+ */
+.com-avatar__texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ==========================================================================
+   Utilidades de composição
+   ========================================================================== */
+
+/* Botão de voltar no topo de uma tela de detalhe. */
+.discreto--voltar {
+  align-self: flex-start;
+}
+
+/* Aviso dentro de um bloco, onde o espaço do cartão já serve de respiro. */
+.aviso--interno {
+  padding: 12px 0;
+  max-width: none;
+}
+
+/* Fileira de ações ao lado direito de uma linha de lista. */
+.etiqueta--ao-lado {
+  margin-left: 8px;
+}
+
+.lista__apoio--antes-da-acao {
+  margin-bottom: 14px;
+}
+
+.lista__apoio--apos-barra {
+  margin-top: 10px;
+}
+
+/* Texto curto que não deve quebrar, como "8 vieram, 2 faltaram". */
+.lista__apoio--inteiro {
+  white-space: nowrap;
+}
+
+/*
+ * O detalhe técnico fica recolhido.
+ *
+ * Ele importa para quem configurou o sistema e atrapalha quem só quer estudar.
+ * Escondido de vez, porém, obriga a abrir o console para descobrir por que a
+ * IA não respondeu.
+ */
+.retorno__detalhe {
+  margin-top: 10px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.retorno__detalhe summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.retorno__detalhe p {
+  margin-top: 6px;
+  font-size: 13px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  line-height: 1.5;
+}
+
+.retorno__mais {
+  margin-top: 8px;
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Alturas de caixa de texto, por uso. */
+.area--baixa {
+  min-height: 80px;
+}
+
+.area--media {
+  min-height: 140px;
+}
+
+.area--alta {
+  min-height: 320px;
+}
+
+/* Linha de lista sem separador, usada quando o cartão já delimita. */
+.lista__item--solto {
+  border-bottom: none;
+  padding: 0;
+}
+
+/*
+ * Medida de leitura.
+ *
+ * Vira classe porque estava repetida como estilo embutido em nove telas, com
+ * quatro valores diferentes escolhidos no olho. Um valor, um lugar.
+ */
+.medida {
+  max-width: min(68ch, 100%);
+}
+
+.medida--curta {
+  max-width: min(46ch, 100%);
+}
+
+/* ==========================================================================
+   Estado vazio
+   ========================================================================== */
+
+/*
+ * Estado vazio que diz o que fazer.
+ *
+ * "Nenhum registro" informa e para por aí, deixando a pessoa procurando onde
+ * começar. O vazio é a primeira tela que todo mundo vê, e é a única chance de
+ * explicar para que a seção serve.
+ */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: min(560px, 100%);
+  padding: 34px;
+  background: var(--branco);
+  border: 2px dashed var(--borda-forte);
+  border-radius: var(--canto-grande);
+}
+
+.vazio__titulo {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.vazio__texto {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.6;
+}
+
+/* A caixa de colar palavras, separada do cabeçalho do baralho. */
+.importacao {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--borda);
+}
+
+/* ==========================================================================
+   Carregamento inicial
+   ========================================================================== */
+
+.carregando {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carregando__ponto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--violeta);
+  animation: pulsar 1.1s ease-in-out infinite;
+}
+
+.carregando__ponto:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.carregando__ponto:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carregando__ponto {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/*
+ * Visível só para leitor de tela.
+ *
+ * `display: none` esconderia de todo mundo, inclusive de quem depende do
+ * anúncio. Este conjunto tira da tela sem tirar da árvore de acessibilidade.
+ */
+.sr-apenas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Telas que não rolam
+   ========================================================================== */
+
+/*
+ * Algumas telas gerenciam a própria rolagem por dentro.
+ *
+ * Numa conversa, o cabeçalho e o campo de escrever ficam parados enquanto só
+ * as mensagens correm, como em qualquer aplicativo de mensagem. Para isso a
+ * página não pode rolar: se ela rolar, o cabeçalho sobe junto e o campo
+ * desaparece embaixo.
+ *
+ * A classe é posta no `<html>`, e não no corpo, porque em iOS a rolagem
+ * elástica vem do elemento raiz e travar só o corpo não a impede.
+ */
+.sem-rolagem,
+.sem-rolagem body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.sem-rolagem .painel {
+  height: 100%;
+  min-height: 0;
+}
+
+.sem-rolagem .conteudo {
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Tela de erro
+   ========================================================================== */
+
+.quebrou {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  max-width: min(520px, 100%);
+  margin-inline: auto;
+  padding: 32px 24px;
+}
+
+.quebrou__titulo {
+  font-size: clamp(24px, 5vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.quebrou__texto {
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--tinta-media);
+  line-height: 1.6;
+}
+
+.quebrou__detalhe {
+  font-size: 13px;
+  color: var(--tinta-fraca);
+}
+
+.quebrou__detalhe summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 6px 0;
+}
+
+.quebrou__detalhe p {
+  margin-top: 8px;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  line-height: 1.5;
+  overflow-wrap: break-word;
 }

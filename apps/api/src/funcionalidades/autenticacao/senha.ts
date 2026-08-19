@@ -28,7 +28,7 @@ const PARAMETROS = {
  * Tamanho mínimo da senha no cadastro.
  *
  * Doze, e não oito. Tamanho é a única propriedade que realmente pesa contra
- * força bruta — exigir maiúscula, número e símbolo produz `Senha@123`, que
+ * força bruta, exigir maiúscula, número e símbolo produz `Senha@123`, que
  * atende a todas as regras e está em qualquer lista de senhas vazadas.
  */
 export const TAMANHO_MINIMO_DA_SENHA = 12;
@@ -69,7 +69,7 @@ export async function conferirSenha(
  *
  * Sem isto, o login responde na hora para e-mail inexistente e demora 200 ms
  * para senha errada. Essa diferença é medível de fora e entrega **quais
- * e-mails estão cadastrados** — que é meio caminho para um ataque direcionado.
+ * e-mails estão cadastrados**, que é meio caminho para um ataque direcionado.
  *
  * Conferir contra um hash falso faz os dois caminhos custarem o mesmo.
  */

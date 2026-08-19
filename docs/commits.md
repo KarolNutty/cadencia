@@ -2,7 +2,7 @@
 
 ## O que um commit precisa responder
 
-O título diz **o que mudou**. O corpo, quando existe, diz **por quê** — que é a
+O título diz **o que mudou**. O corpo, quando existe, diz **por quê**, que é a
 única parte que o `git diff` não consegue mostrar sozinho.
 
 Se o corpo apenas repete o título em outras palavras, ele não precisava existir.
@@ -32,8 +32,8 @@ arquivos junto com uma correção esconde a correção no meio do ruído. Format
 vai sozinha, em `chore`.
 
 **O commit compila e os testes passam.** Cada ponto do histórico precisa ser um
-lugar onde dá para voltar. Commit quebrado transforma `git bisect` — a
-ferramenta que encontra qual mudança introduziu um bug — em algo inútil.
+lugar onde dá para voltar. Commit quebrado transforma `git bisect`, a
+ferramenta que encontra qual mudança introduziu um bug, em algo inútil.
 
 **Referencie o teste que prova.** Quando a mudança é sutil, dizer qual teste a
 cobre poupa a próxima pessoa de procurar.
@@ -47,7 +47,7 @@ fix: recusa data inválida em vez de estourar no validador
 
 O refine do dia de estudo chamava toISOString numa data inválida, e isso
 lança RangeError em vez de devolver false. Na API viraria 500 no lugar de
-400 — o servidor caindo por causa de entrada malformada.
+400, o servidor caindo por causa de entrada malformada.
 
 Agravante: o zod roda o refine mesmo quando o regex já falhou, então
 qualquer texto chegava até lá.
@@ -90,8 +90,7 @@ Ruins, e por quê:
 
 ## Sobre o histórico
 
-Antes de abrir um PR, o histórico local pode ser reescrito à vontade —
-`rebase -i` para juntar os "ajusta teste" e "corrige typo" no commit a que
+Antes de abrir um PR, o histórico local pode ser reescrito à vontade, `rebase -i` para juntar os "ajusta teste" e "corrige typo" no commit a que
 pertencem.
 
 Depois de publicado em branch compartilhada, não se reescreve.

@@ -30,7 +30,7 @@ export interface ResultadoDoEnvio {
 /**
  * O dia vem do app, mas dentro de limites.
  *
- * Só o cliente sabe o fuso do aluno e se já passou das 4h — por isso ele
+ * Só o cliente sabe o fuso do aluno e se já passou das 4h, por isso ele
  * informa. Mas confiar sem limite deixaria alguém marcar estudo em 2050 e
  * sumir da lista de pendências para sempre, ou preencher meses de sequência
  * que nunca existiram.
@@ -71,7 +71,7 @@ export function criarServicoDeEstudo(sql: Banco) {
   }
 
   /**
-   * Confere que a turma é deste professor. 404 quando não é — mesmo motivo da
+   * Confere que a turma é deste professor. 404 quando não é, mesmo motivo da
    * matrícula do aluno: um 403 confirmaria que aquela turma existe.
    */
   async function exigirTurmaDoProfessor(
@@ -133,7 +133,7 @@ export function criarServicoDeEstudo(sql: Banco) {
      *
      * Não recebe um "hoje": **cada aluno tem o seu**. O professor pode estar em
      * São Paulo com o aluno em Lisboa, ou simplesmente abrir o painel às duas
-     * da manhã — e nos dois casos um dia de referência único poria gente no dia
+     * da manhã, e nos dois casos um dia de referência único poria gente no dia
      * errado.
      */
     async painelDaTurma(professorId: string, turmaId: string) {
@@ -197,7 +197,7 @@ export function criarServicoDeEstudo(sql: Banco) {
      *
      * Uma transação para todo o lote: meio lote gravado deixaria o app sem
      * saber o que reenviar, e o histórico com buraco. E o `loteId` faz o
-     * reenvio ser seguro — se a resposta se perder na volta, a segunda
+     * reenvio ser seguro, se a resposta se perder na volta, a segunda
      * tentativa reconhece que já processou em vez de duplicar a revisão.
      */
     async registrarRevisoes(

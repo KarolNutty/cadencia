@@ -4,7 +4,7 @@ import type { Nivel } from '@cadencia/contrato';
  * Valores fixos do domínio, num lugar só.
  *
  * Espalhados pelas telas, viram três listas de níveis que divergem na primeira
- * vez que alguém acrescenta um — e a divergência só aparece quando o professor
+ * vez que alguém acrescenta um, e a divergência só aparece quando o professor
  * cadastra um baralho que some do filtro.
  */
 

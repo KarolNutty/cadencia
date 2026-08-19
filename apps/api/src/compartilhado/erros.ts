@@ -3,7 +3,7 @@ import type { CodigoDeErro, Erro } from '@cadencia/contrato';
 /**
  * Erro que a API sabe transformar em resposta.
  *
- * O código vem do contrato — o cliente trata cada um de um jeito, e um código
+ * O código vem do contrato, o cliente trata cada um de um jeito, e um código
  * novo que ninguém trata vira tela branca. Por isso a lista é fechada e
  * validada pelo próprio schema.
  */
@@ -37,12 +37,14 @@ const STATUS_POR_CODIGO: Record<CodigoDeErro, number> = {
   entrada_invalida: 400,
   credenciais_invalidas: 401,
   conflito: 409,
+  // 502: o servidor funcionou, quem falhou foi o serviço atrás dele.
+  servico_indisponivel: 502,
 };
 
 /**
  * Recurso alheio responde 404, e não 403.
  *
- * Um 403 confirma que aquele registro existe — e isso permite mapear a base
+ * Um 403 confirma que aquele registro existe, e isso permite mapear a base
  * inteira só variando o id na URL. O 404 não distingue "não existe" de "não é
  * seu", que é exatamente o que se quer.
  *

@@ -31,7 +31,7 @@ export const TETO_INTERVALO_DIAS = 120;
  *
  * O SM-2 deixa a facilidade cair até 1.3, e aí a carta volta praticamente todo
  * dia, para sempre. Numa turma real isso vira um punhado de cartas que o aluno
- * odeia e que dominam toda sessão — e ele para de estudar. O piso mais alto
+ * odeia e que dominam toda sessão, e ele para de estudar. O piso mais alto
  * garante que o intervalo sempre cresça depois de dois acertos.
  */
 export const FACILIDADE_MINIMA = 1.6;
@@ -41,7 +41,7 @@ export const FACILIDADE_INICIAL = 2.5;
 /**
  * A partir daqui, insistir no agendamento é ignorar o problema.
  *
- * Uma carta errada quatro vezes não precisa de outro intervalo — precisa que o
+ * Uma carta errada quatro vezes não precisa de outro intervalo, precisa que o
  * professor explique de novo. O app sinaliza e sai do caminho.
  */
 export const LAPSOS_PARA_SINALIZAR = 4;
@@ -80,7 +80,7 @@ export function agendamentoNovo(hoje: DiaDeEstudo): Agendamento {
  * Função pura: mesmas entradas, mesma saída, sem relógio e sem banco.
  *
  * **É este arquivo que roda nos dois lados.** O app chama para responder na
- * hora — o aluno avalia trinta cartas seguidas e esperar a rede a cada uma
+ * hora, o aluno avalia trinta cartas seguidas e esperar a rede a cada uma
  * destruiria o ritmo do estudo. O servidor chama de novo ao receber a revisão, e
  * o resultado dele é a autoridade. Como é o mesmo módulo importado, os dois não
  * têm como divergir.
@@ -145,7 +145,7 @@ export interface Revisao {
  *
  * O banco guarda o agendamento pronto, porque "o que vence hoje" roda a cada
  * abertura do app e não pode ser uma reconstrução. Mas as revisões são
- * append-only, então o estado sempre pode ser recalculado — e há um teste que
+ * append-only, então o estado sempre pode ser recalculado, e há um teste que
  * compara os dois caminhos. Se divergirem, algo escreveu no agendamento sem
  * passar por aqui.
  */

@@ -6,6 +6,7 @@ import {
 } from '@cadencia/contrato';
 import { semPermissao } from '../../compartilhado/erros';
 import { porConta } from '../../compartilhado/limite';
+import { idsDaRota } from '../../compartilhado/parametros';
 import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import type { ServicoDeRedacao } from './servico';
 
@@ -62,7 +63,7 @@ export async function registrarRotasDeRedacao(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId } = requisicao.params as { turmaId: string };
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
       const entrada = criarTemaEntradaSchema.parse(requisicao.body);
 
       const tema = await redacao.criarTema(
@@ -84,7 +85,7 @@ export async function registrarRotasDeRedacao(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId } = requisicao.params as { turmaId: string };
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
       return redacao.filaDoProfessor(usuario.id, turmaId);
     },
   );
@@ -93,7 +94,7 @@ export async function registrarRotasDeRedacao(
     const usuario = usuarioDaRequisicao(requisicao);
     if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-    const { redacaoId } = requisicao.params as { redacaoId: string };
+    const { redacaoId } = idsDaRota(requisicao, 'redacaoId');
     return redacao.paraCorrigir(usuario.id, redacaoId);
   });
 
@@ -104,7 +105,7 @@ export async function registrarRotasDeRedacao(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { redacaoId } = requisicao.params as { redacaoId: string };
+      const { redacaoId } = idsDaRota(requisicao, 'redacaoId');
       const entrada = corrigirEntradaSchema.parse(requisicao.body);
 
       await redacao.corrigir(usuario.id, redacaoId, entrada.parecer, entrada.nota);

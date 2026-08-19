@@ -67,11 +67,11 @@ describe('a que dia de estudo um instante pertence', () => {
     // O mesmo instante: 05:00 UTC.
     const instante = emUTC('2026-08-17T05:00:00');
 
-    // São Paulo: 02:00 — antes da virada, ainda é dia 16.
+    // São Paulo: 02:00, antes da virada, ainda é dia 16.
     expect(diaDeEstudoDe(instante, SAO_PAULO)).toBe('2026-08-16');
-    // Lisboa: 06:00 — depois da virada, já é dia 17.
+    // Lisboa: 06:00, depois da virada, já é dia 17.
     expect(diaDeEstudoDe(instante, LISBOA)).toBe('2026-08-17');
-    // Tóquio: 14:00 — dia 17 há horas.
+    // Tóquio: 14:00, dia 17 há horas.
     expect(diaDeEstudoDe(instante, TOQUIO)).toBe('2026-08-17');
   });
 

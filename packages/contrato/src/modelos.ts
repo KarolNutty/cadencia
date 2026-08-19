@@ -51,7 +51,7 @@ export const revisaoSchema = z.object({
    *
    * Só o app sabe em que fuso o aluno está e se já passou das 4h da manhã.
    * Deixar o servidor decidir faria quem estuda à 1h aparecer como tendo
-   * estudado no dia seguinte — e perder a sequência por estar estudando.
+   * estudado no dia seguinte, e perder a sequência por estar estudando.
    */
   dia: diaDeEstudoSchema,
 });

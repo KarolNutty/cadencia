@@ -233,7 +233,7 @@ describe('limite de envios', () => {
     /**
      * Numa escola com rede compartilhada, todos os alunos saem pelo mesmo IP.
      * Com a chave por endereço, os envios de uma turma somariam e a última
-     * pessoa a escrever seria bloqueada — o mesmo defeito que o limite de login
+     * pessoa a escrever seria bloqueada, o mesmo defeito que o limite de login
      * já teve neste projeto.
      */
     const primeiro = await cenario();

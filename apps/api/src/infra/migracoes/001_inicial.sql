@@ -2,7 +2,7 @@
 --
 -- Migração é arquivo numerado e imutável: uma vez aplicada em qualquer
 -- ambiente, ela não é editada. Corrigir algo é escrever a próxima. Editar uma
--- migração já aplicada produz bancos diferentes com o mesmo número — e a
+-- migração já aplicada produz bancos diferentes com o mesmo número, e a
 -- diferença só aparece quando alguém tenta reproduzir um bug e não consegue.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -113,14 +113,14 @@ CREATE INDEX revisoes_por_aluno ON revisoes (aluno_id, dia);
 
 -- A idempotência do envio depende deste índice: a segunda tentativa do mesmo
 -- lote esbarra na restrição em vez de duplicar o histórico. A garantia é do
--- banco, e não de um "select antes do insert" — que perde numa corrida entre
+-- banco, e não de um "select antes do insert", que perde numa corrida entre
 -- duas requisições simultâneas.
 CREATE UNIQUE INDEX revisoes_lote_unico ON revisoes (lote_id, cartao_id);
 
 -- Tokens de renovação em uso.
 --
 -- Guardar o token permite duas coisas que um JWT sozinho não dá: revogar antes
--- da expiração e detectar reúso. Guarda-se o HASH, nunca o token — quem lesse
+-- da expiração e detectar reúso. Guarda-se o HASH, nunca o token, quem lesse
 -- o banco poderia se passar por qualquer aluno.
 CREATE TABLE tokens_de_renovacao (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -140,7 +140,7 @@ CREATE INDEX tokens_por_usuario ON tokens_de_renovacao (usuario_id);
 -- Registro de eventos de autenticação.
 --
 -- Nunca guarda token nem senha. Sem este registro, um vazamento é descoberto
--- pelo próprio usuário — e sempre tarde.
+-- pelo próprio usuário, e sempre tarde.
 CREATE TABLE eventos_de_autenticacao (
   id          BIGSERIAL PRIMARY KEY,
   -- SET NULL: apagar o usuário não apaga o rastro de que os eventos
