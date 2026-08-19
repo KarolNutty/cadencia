@@ -7,7 +7,7 @@ import type { Banco, Executor } from '../../infra/banco';
  * Gestão do professor: turmas, matrícula e conteúdo.
  *
  * Toda operação confere primeiro que a turma é de quem está pedindo, e responde
- * 404 quando não é — nunca 403, que confirmaria a existência do registro.
+ * 404 quando não é, nunca 403, que confirmaria a existência do registro.
  */
 
 interface LinhaDeUsuario {
@@ -160,7 +160,7 @@ export function criarServicoDeGestao(sql: Banco) {
     /**
      * Importa a lista colada.
      *
-     * O que já existe no baralho é **ignorado, não duplicado** — reimportar uma
+     * O que já existe no baralho é **ignorado, não duplicado**, reimportar uma
      * lista corrigida é o fluxo normal, e duplicar faria o aluno ver a mesma
      * carta duas vezes. A garantia vem do índice único, e não de conferir antes:
      * conferir antes perde numa corrida entre duas importações.
@@ -225,7 +225,7 @@ export function criarServicoDeGestao(sql: Banco) {
      * Devolve uma palavra travada ao estudo.
      *
      * É o botão "revisamos em aula". Sem ele o ciclo fica aberto: a carta sai da
-     * revisão do aluno, o professor explica, e ela nunca volta — o oposto do que
+     * revisão do aluno, o professor explica, e ela nunca volta, o oposto do que
      * o produto promete.
      *
      * Os lapsos são zerados junto: manter o contador em quatro faria a carta ser

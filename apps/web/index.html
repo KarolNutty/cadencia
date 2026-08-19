@@ -13,6 +13,26 @@
     />
   </head>
   <body>
+    <script>
+      /*
+       * O tema é aplicado antes de qualquer coisa desenhar.
+       *
+       * Deixar isso para o React fazer produz um flash branco no carregamento,
+       * porque o HTML já pintou com o fundo padrão quando o componente monta.
+       * São seis linhas aqui que evitam o efeito mais visível de tema escuro
+       * mal feito.
+       */
+      (function () {
+        var guardado = localStorage.getItem('cadencia.tema');
+        var escuro =
+          guardado === 'escuro' ||
+          (guardado !== 'claro' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        document.documentElement.dataset.tema = escuro ? 'escuro' : 'claro';
+      })();
+    </script>
+
     <div id="raiz"></div>
     <script type="module" src="/src/principal.tsx"></script>
   </body>

@@ -13,7 +13,7 @@ import type { Nivel } from './nivelamento';
  * motivo: modelo de linguagem erra contagem com confiança total, e um número
  * errado numa correção mina a confiança do aluno no resto do parecer.
  *
- * O que sobra para o modelo é justamente onde ele é bom — reconhecer que "I am
+ * O que sobra para o modelo é justamente onde ele é bom, reconhecer que "I am
  * agree" é interferência do português e explicar por quê.
  */
 
@@ -47,8 +47,7 @@ export const TAMANHO_ESPERADO: Record<Nivel, { minimo: number; ideal: number }> 
  * Conta palavras.
  *
  * Código conta; o modelo não. Parece exagero até a primeira vez em que ele
- * responde "seu texto tem aproximadamente 150 palavras" para um texto de 87 — e
- * o aluno acredita.
+ * responde "seu texto tem aproximadamente 150 palavras" para um texto de 87, e * o aluno acredita.
  */
 export function contarPalavras(texto: string): number {
   const limpo = texto.replace(/[\u2018\u2019]/g, "'").trim();
@@ -95,7 +94,7 @@ export interface ApontamentoVerificado extends ApontamentoDaIa {
    * O trecho realmente existe no texto do aluno?
    *
    * Modelo de linguagem parafraseia sem perceber. Um apontamento que cita um
-   * trecho inexistente é confuso para o aluno — ele procura no próprio texto e
+   * trecho inexistente é confuso para o aluno, ele procura no próprio texto e
    * não acha.
    */
   encontrado: boolean;
@@ -106,7 +105,7 @@ export interface ApontamentoVerificado extends ApontamentoDaIa {
  *
  * Isto **não** julga se a correção está certa: julga se ela é rastreável. Um
  * apontamento cujo trecho não existe no texto vai marcado, e a tela o separa
- * dos demais em vez de escondê-lo — esconder tiraria do professor a chance de
+ * dos demais em vez de escondê-lo, esconder tiraria do professor a chance de
  * perceber que o modelo está alucinando.
  */
 export function verificarAnalise(

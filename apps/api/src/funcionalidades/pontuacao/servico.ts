@@ -12,7 +12,7 @@ import type { Banco, Executor } from '../../infra/banco';
  * Pontuação e ranking.
  *
  * O XP é **sempre calculado no servidor**, a partir do agendamento que estava
- * gravado antes da revisão. O cliente não informa quanto ganhou — se
+ * gravado antes da revisão. O cliente não informa quanto ganhou, se
  * informasse, bastaria abrir o console do navegador para liderar o ranking.
  */
 

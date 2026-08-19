@@ -10,7 +10,7 @@ import { type DiaDeEstudo, diasEntre } from './dia-de-estudo';
  *
  * Parece detalhe de produto e é decisão de engenharia. Dar ponto por carta
  * avaliada faz o aluno marcar "fácil" trinta vezes e liderar o ranking sem ter
- * estudado — e, pior, ensina exatamente o comportamento que destrói o
+ * estudado, e, pior, ensina exatamente o comportamento que destrói o
  * agendamento dele, porque marcar fácil no que não se sabe manda a carta para
  * daqui a dois meses.
  *
@@ -27,7 +27,7 @@ const XP_BONUS_RECUPERACAO = 5;
  * Teto diário.
  *
  * Sem ele, quem tem uma tarde livre passa na frente de quem estuda vinte
- * minutos todo dia — e o ranking passaria a medir tempo disponível, não
+ * minutos todo dia, e o ranking passaria a medir tempo disponível, não
  * constância. O teto é o que faz a ofensiva valer mais que a maratona.
  */
 export const TETO_DIARIO_DE_XP = 200;
@@ -42,7 +42,7 @@ export interface RevisaoPontuavel {
  * Quanto uma revisão vale.
  *
  * Zero para carta que não estava vencida: revisar adiantado é livre, mas não
- * rende — senão bastaria abrir o baralho inteiro toda hora.
+ * rende, senão bastaria abrir o baralho inteiro toda hora.
  */
 export function xpDaRevisao(revisao: RevisaoPontuavel, dia: DiaDeEstudo): number {
   const vencida = diasEntre(revisao.agendamentoAnterior.venceEm, dia) >= 0;
@@ -106,7 +106,7 @@ export interface Ofensiva {
  * A ofensiva: dias seguidos de estudo.
  *
  * Estudou hoje, a ofensiva está garantida. Estudou ontem mas ainda não hoje,
- * ela está **em risco** — e é esse aviso que o produto precisa dar, não o número
+ * ela está **em risco**, e é esse aviso que o produto precisa dar, não o número
  * cru. Faltou ontem e hoje, zerou.
  */
 export function calcularOfensiva(
@@ -181,7 +181,7 @@ export interface PosicaoNoRanking extends LinhaDoRanking {
  *
  * **Da semana, e não de sempre.** Um ranking acumulado desde o começo trava:
  * quem entrou depois nunca alcança, e quem lidera pode parar de estudar sem
- * perder o topo. Reiniciar toda semana devolve a chance a todo mundo — que é o
+ * perder o topo. Reiniciar toda semana devolve a chance a todo mundo, que é o
  * único jeito de um ranking motivar em vez de desanimar.
  */
 export function ordenarRanking(linhas: readonly LinhaDoRanking[]): PosicaoNoRanking[] {

@@ -30,7 +30,7 @@ interface LinhaDeUsuario {
  * O token guardado é o **hash**, nunca o token.
  *
  * Quem conseguisse ler a tabela poderia se passar por qualquer aluno até a
- * expiração. SHA-256 basta aqui — diferente de senha, o token tem entropia
+ * expiração. SHA-256 basta aqui, diferente de senha, o token tem entropia
  * alta e não é adivinhável por dicionário, então o custo de memória do Argon2
  * não compra nada e só deixaria cada renovação lenta.
  */
@@ -81,7 +81,7 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
    * O executor é parâmetro, e não a conexão capturada.
    *
    * Chamada de dentro de `sql.begin` usando a conexão de fora, esta função
-   * espera para sempre pela conexão que a própria transação segura — e o
+   * espera para sempre pela conexão que a própria transação segura, e o
    * INSERT do token novo ficaria fora da transação, quebrando a atomicidade
    * que a rotação depende.
    */
@@ -120,6 +120,22 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
 
   return {
     /**
+     * O usuário como está agora, e não como estava quando o token nasceu.
+     *
+     * O token carrega só `id` e `papel`, de propósito: nome e e-mail mudam, e
+     * um token que os carregue mostra o valor antigo até expirar. É também a
+     * única forma de uma conta removida deixar de ser aceita antes do
+     * vencimento.
+     */
+    async buscarUsuario(id: string): Promise<Usuario | null> {
+      const [usuario] = await sql<Usuario[]>`
+        SELECT id, nome, email, papel, fuso FROM usuarios WHERE id = ${id}
+      `;
+
+      return usuario ?? null;
+    },
+
+    /**
      * Cria a conta e resolve os convites pendentes.
      *
      * Quem se cadastra é **sempre aluno**: professor é criado pela escola. O
@@ -127,7 +143,7 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
      *
      * Se houver convite pendente para este e-mail, a matrícula acontece na
      * mesma transação. Sem isso o convite ficaria guardado para sempre, e o
-     * professor teria de convidar de novo depois — sem saber que precisa.
+     * professor teria de convidar de novo depois, sem saber que precisa.
      */
     async cadastrar(
       dados: { nome: string; email: string; senha: string; fuso?: string | undefined },
@@ -207,7 +223,7 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
 
       if (!linha) {
         // Gasta o mesmo tempo de uma verificação real. Sem isto, e-mail
-        // inexistente responde na hora e senha errada demora ~200 ms — e essa
+        // inexistente responde na hora e senha errada demora ~200 ms, e essa
         // diferença, medida de fora, entrega quais e-mails estão cadastrados.
         await gastarTempoDeVerificacao();
         await registrar({ tipo: 'entrada_recusada', ip: contexto.ip, detalhe: 'email' });
@@ -244,7 +260,7 @@ export function criarServicoDeAutenticacao(sql: Banco, emissor: Emissor) {
      *
      * O token usado é marcado e não vale mais. Se um token **já usado**
      * reaparecer, só há duas explicações: ou ele vazou, ou houve corrida. Nos
-     * dois casos a resposta é a mesma — a família inteira cai e a pessoa entra
+     * dois casos a resposta é a mesma, a família inteira cai e a pessoa entra
      * de novo.
      *
      * É o que transforma um roubo de token silencioso, que duraria trinta

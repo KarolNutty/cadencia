@@ -17,7 +17,7 @@ export interface OpcoesSessao {
  * Quantas cartas de uma vez.
  *
  * Vinte é o que cabe numa espera de ônibus. Uma sessão que não termina é uma
- * sessão que o aluno abandona no meio — e abandonar ensina que o app é um peso.
+ * sessão que o aluno abandona no meio, e abandonar ensina que o app é um peso.
  */
 export const LIMITE_PADRAO_DA_SESSAO = 20;
 

@@ -19,6 +19,8 @@ import { criarServicoDeNivelamento } from './funcionalidades/nivelamento/servico
 import { registrarRotasDePontuacao } from './funcionalidades/pontuacao/rotas';
 import { criarServicoDePontuacao } from './funcionalidades/pontuacao/servico';
 import { escolherProvedor as escolherParceiro } from './funcionalidades/conversa/provedor';
+import { registrarRotasDeDiario } from './funcionalidades/diario/rotas';
+import { criarServicoDeDiario } from './funcionalidades/diario/servico';
 import { registrarRotasDeConversa } from './funcionalidades/conversa/rotas';
 import { criarServicoDeConversa } from './funcionalidades/conversa/servico';
 import { escolherProvedor } from './funcionalidades/redacao/provedor';
@@ -37,6 +39,23 @@ export interface Servidor {
   sql: Banco;
 }
 
+/**
+ * Como o log se comporta em cada ambiente.
+ *
+ * Produção: JSON, que é o que agregador de log consome.
+ * Desenvolvimento: formato legível, para o erro ser lido direto no terminal.
+ * Teste: silêncio, senão cada execução despeja centenas de linhas.
+ */
+function registrador(modo: 'development' | 'test' | 'production') {
+  if (modo === 'test') return false;
+  if (modo === 'production') return true;
+
+  return {
+    level: 'info',
+    transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss' } },
+  };
+}
+
 export async function construirServidor({
   ambiente,
   banco,
@@ -44,10 +63,23 @@ export async function construirServidor({
   const sql = banco ?? conectar({ url: ambiente.DATABASE_URL });
 
   const app = Fastify({
-    // Em produção o log vai para o coletor; em teste, silêncio.
-    logger: ambiente.producao ? true : false,
+    /*
+     * Três modos, e não dois.
+     *
+     * A intenção sempre foi silenciar o log nos testes, mas a condição era
+     * `producao ? true : false`, e desenvolvimento caiu no mesmo balde. O
+     * resultado é que `requisicao.log.error` escrevia no vazio justamente na
+     * máquina de quem tenta entender o que aconteceu, e uma falha de provedor
+     * de IA ficou como "algo deu errado" sem nenhuma pista.
+     */
+    logger: registrador(ambiente.NODE_ENV),
+
+    // O log de cada requisição só interessa em produção; em desenvolvimento
+    // ele esconde o que importa no meio do ruído.
+    disableRequestLogging: ambiente.NODE_ENV !== 'production',
+
     // O IP real vem do proxy. Sem isto, o limite por IP contaria todo mundo
-    // como se fosse o mesmo cliente — o balanceador.
+    // como se fosse o mesmo cliente, o balanceador.
     trustProxy: ambiente.producao,
   });
 
@@ -62,7 +94,7 @@ export async function construirServidor({
 
   await app.register(cors, {
     // Lista explícita, nunca `true`. `carregarAmbiente` recusa subir em
-    // produção sem ela — e recusa origem em http, porque o cookie vai com
+    // produção sem ela, e recusa origem em http, porque o cookie vai com
     // Secure e simplesmente não seria enviado.
     origin: ambiente.ORIGENS_PERMITIDAS.length > 0 ? ambiente.ORIGENS_PERMITIDAS : false,
     // Necessário para o navegador mandar o cookie de renovação.
@@ -72,6 +104,31 @@ export async function construirServidor({
 
   await app.register(cookie);
 
+  /*
+   * Corpo vazio com `content-type: application/json` é aceito.
+   *
+   * O padrão do Fastify recusa a combinação, e ela é legítima aqui: sair e
+   * renovar no navegador não mandam corpo, porque o token viaja no cookie. Sem
+   * isto, o erro estoura antes da rota e fala de JSON vazio, o que manda quem
+   * investiga para o lado errado.
+   */
+  app.addContentTypeParser(
+    'application/json',
+    { parseAs: 'string' },
+    (_requisicao, corpo, feito) => {
+      if (corpo === '') return feito(null, undefined);
+
+      try {
+        feito(null, JSON.parse(corpo as string));
+      } catch {
+        feito(
+          new ErroDaApi('entrada_invalida', 'O corpo não é um JSON válido.'),
+          undefined,
+        );
+      }
+    },
+  );
+
   await app.register(limitador, {
     global: false,
     /**
@@ -79,7 +136,7 @@ export async function construirServidor({
      *
      * No `onRequest` o corpo ainda não foi interpretado, e `requisicao.body` é
      * `undefined`. A chave da rota de login, que junta IP e e-mail, degeneraria
-     * em silêncio para só o IP — e aí cinco tentativas de uma pessoa
+     * em silêncio para só o IP, e aí cinco tentativas de uma pessoa
      * bloqueariam o login de todo mundo atrás do mesmo endereço. Numa escola
      * com rede compartilhada, isso derruba a turma inteira.
      *
@@ -110,6 +167,21 @@ export async function construirServidor({
    */
   app.setErrorHandler((erro, requisicao, resposta) => {
     if (erro instanceof ErroDaApi) {
+      /*
+       * Falha de serviço externo também vai para o log.
+       *
+       * A tela mostra o que a pessoa precisa fazer; o log guarda o que quem
+       * opera precisa investigar. Sem isso, um provedor recusando a chave só
+       * aparece na tela de quem estiver usando no momento, e some quando a
+       * página é recarregada.
+       */
+      if (erro.codigo === 'servico_indisponivel') {
+        requisicao.log.error(
+          { rota: requisicao.url, motivo: erro.campos?.[0]?.motivo },
+          erro.message,
+        );
+      }
+
       return resposta.status(erro.status).send(erro.paraResposta());
     }
 
@@ -138,7 +210,31 @@ export async function construirServidor({
       });
     }
 
-    requisicao.log.error({ erro }, 'erro não tratado');
+    /*
+     * `{ erro }` registra `{}`.
+     *
+     * `Error` guarda mensagem e pilha em propriedades não enumeráveis, e o
+     * serializador de log passa por cima delas. O objeto sai vazio e o log
+     * vira ruído com aparência de informação, que é pior do que não registrar:
+     * dá a impressão de que já se olhou.
+     *
+     * Os campos vão extraídos, um a um.
+     */
+    requisicao.log.error(
+      {
+        rota: `${requisicao.method} ${requisicao.url}`,
+        tipo: erro instanceof Error ? erro.name : typeof erro,
+        mensagem: erro instanceof Error ? erro.message : String(erro),
+        pilha: erro instanceof Error ? erro.stack : undefined,
+        // Erro de driver de banco carrega o código do Postgres, que costuma
+        // dizer mais que a mensagem.
+        codigoDoBanco:
+          typeof erro === 'object' && erro !== null && 'code' in erro
+            ? String(erro.code)
+            : undefined,
+      },
+      'erro não tratado',
+    );
 
     return resposta.status(500).send({
       codigo: 'entrada_invalida',
@@ -158,11 +254,18 @@ export async function construirServidor({
   await registrarRotasDeRedacao(app, {
     // Sem chave, o provedor simulado assume: o projeto roda por completo sem
     // credencial, e quem clona vê a correção funcionando.
-    redacao: criarServicoDeRedacao(sql, escolherProvedor(ambiente.GEMINI_API_KEY)),
+    redacao: criarServicoDeRedacao(
+      sql,
+      escolherProvedor(ambiente.GEMINI_API_KEY, ambiente.GEMINI_MODELO),
+    ),
   });
   await registrarRotasDeConversa(app, {
-    conversa: criarServicoDeConversa(sql, escolherParceiro(ambiente.GEMINI_API_KEY)),
+    conversa: criarServicoDeConversa(
+      sql,
+      escolherParceiro(ambiente.GEMINI_API_KEY, ambiente.GEMINI_MODELO),
+    ),
   });
+  await registrarRotasDeDiario(app, { diario: criarServicoDeDiario(sql) });
 
   return { app, sql };
 }

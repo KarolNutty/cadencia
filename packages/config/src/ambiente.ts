@@ -3,7 +3,7 @@ import { z } from 'zod';
 /**
  * Validação do ambiente, na partida.
  *
- * Segredo não mora no código — mas "não estar no código" não basta. O modo mais
+ * Segredo não mora no código, mas "não estar no código" não basta. O modo mais
  * comum de vazamento não é o segredo commitado: é o **segredo ausente** que vira
  * um valor padrão fraco. Alguém escreve `process.env.JWT_SECRET ?? 'dev'`, o
  * deploy sobe sem a variável, e a aplicação passa meses assinando token com a
@@ -22,7 +22,7 @@ const TAMANHO_MINIMO_DO_SEGREDO = 32;
  *
  * A checagem é por **substring**, e não por igualdade: o caso real não é alguém
  * usar exatamente `changeme`, é alguém pegar `changeme` e completar até passar
- * no tamanho mínimo. Comparação exata nunca pegaria isso — e, como todos estes
+ * no tamanho mínimo. Comparação exata nunca pegaria isso, e, como todos estes
  * valores têm menos de 32 caracteres, a regra de tamanho já os barraria antes.
  * Seria uma verificação que nunca dispara.
  *
@@ -44,7 +44,7 @@ const TRECHOS_SUSPEITOS = [
  * Quantos caracteres distintos um segredo precisa ter.
  *
  * Pega `aaaa...` e `abababab...`, que passam no tamanho e não têm entropia
- * nenhuma. Não é medida de força — é piso de sanidade.
+ * nenhuma. Não é medida de força, é piso de sanidade.
  */
 const CARACTERES_DISTINTOS_MINIMOS = 12;
 
@@ -72,10 +72,20 @@ const ambienteSchema = z.object({
    *
    * Opcional de propósito: sem ela, a correção usa o provedor simulado e o
    * projeto roda por completo. Exigir a chave transformaria "clonar e rodar" em
-   * "clonar, criar conta no Google, gerar chave, e então rodar" — e a maioria
+   * "clonar, criar conta no Google, gerar chave, e então rodar", e a maioria
    * das pessoas desiste no segundo passo.
    */
   GEMINI_API_KEY: z.string().min(20).optional(),
+
+  /**
+   * O modelo do Gemini.
+   *
+   * Configurável porque provedores aposentam modelo sem aviso, e quando isso
+   * acontece a correção não deveria exigir mexer no código, abrir pull request
+   * e publicar de novo. O padrão é o mais recente conhecido; trocar é editar
+   * uma linha do ambiente.
+   */
+  GEMINI_MODELO: z.string().min(3).default('gemini-3.6-flash'),
 
   /** String de conexão completa. Nunca usuário e senha em variáveis separadas. */
   DATABASE_URL: z
@@ -121,7 +131,7 @@ export class AmbienteInvalido extends Error {
 
 /**
  * Lê e valida o ambiente. Lança `AmbienteInvalido` com a lista completa de
- * problemas — e não só o primeiro, para quem está configurando resolver tudo
+ * problemas, e não só o primeiro, para quem está configurando resolver tudo
  * de uma vez em vez de descobrir um por execução.
  */
 export function carregarAmbiente(fonte: NodeJS.ProcessEnv = process.env): Ambiente {

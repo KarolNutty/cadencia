@@ -12,8 +12,7 @@ import {
 } from './apoio';
 
 // `!` é a atribuição definida: quem preenche é o `beforeAll`, e o TypeScript
-// não tem como enxergar isso sozinho. A alternativa — tipar como opcional —
-// obrigaria `app!.inject` em cada um dos vinte e cinco casos.
+// não tem como enxergar isso sozinho. A alternativa, tipar como opcional, // obrigaria `app!.inject` em cada um dos vinte e cinco casos.
 let sql!: Banco;
 let app!: FastifyInstance;
 
@@ -256,7 +255,7 @@ describe('renovar', () => {
 
   it('reusar um token já usado derruba a família inteira', async () => {
     // Só há duas explicações para um token usado reaparecer: ele vazou, ou
-    // houve corrida. Nos dois casos a resposta é a mesma — e é isso que
+    // houve corrida. Nos dois casos a resposta é a mesma, e é isso que
     // transforma um roubo silencioso de trinta dias num logout percebido.
     const usuario = await criarUsuario(sql);
     const { corpo: primeiro } = await entrar(app, usuario, 'mobile');
@@ -295,7 +294,7 @@ describe('renovar', () => {
   });
 
   it('derrubar uma família não desloga os outros aparelhos', async () => {
-    // Cada entrada abre uma família própria — senão um token vazado no celular
+    // Cada entrada abre uma família própria, senão um token vazado no celular
     // deslogaria a pessoa também no computador.
     const usuario = await criarUsuario(sql);
 
@@ -390,7 +389,14 @@ describe('sair', () => {
 });
 
 describe('rota protegida', () => {
-  it('responde com o usuário do token', async () => {
+  it('responde com o usuário autenticado', async () => {
+    /*
+     * A resposta traz o usuário do BANCO, e não o conteúdo do token.
+     *
+     * O token carrega só `id` e `papel`, de propósito: nome e e-mail mudam, e
+     * um token que os carregue mostra o valor antigo até expirar. Este teste
+     * afirmava o contrário e ficou desatualizado quando a rota foi corrigida.
+     */
     const usuario = await criarUsuario(sql, { papel: 'professor' });
     const { corpo } = await entrar(app, usuario, 'mobile');
 
@@ -401,7 +407,11 @@ describe('rota protegida', () => {
     });
 
     expect(resposta.statusCode).toBe(200);
-    expect(resposta.json().usuario).toEqual({ id: usuario.id, papel: 'professor' });
+    expect(resposta.json().usuario).toMatchObject({
+      id: usuario.id,
+      papel: 'professor',
+      nome: usuario.nome,
+    });
   });
 
   it('recusa sem cabeçalho', async () => {
@@ -478,5 +488,129 @@ describe('cabeçalhos de segurança', () => {
     expect(resposta.headers['x-powered-by']).toBeUndefined();
     expect(resposta.headers['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(resposta.headers['x-content-type-options']).toBe('nosniff');
+  });
+});
+
+describe('requisições sem corpo', () => {
+  /**
+   * No navegador o token de renovação viaja no cookie, então sair e renovar
+   * mandam requisição vazia. O padrão do Fastify recusa corpo vazio quando o
+   * `content-type` é JSON, e o erro estoura antes da rota, falando de JSON
+   * vazio em vez de sessão.
+   */
+
+  it('renovar no navegador funciona sem corpo', async () => {
+    const usuario = await criarUsuario(sql, { papel: 'aluno' });
+    const { cookies } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'web');
+
+    const cookie = cookies.find((c) => c.name === 'cadencia_renovacao');
+
+    const resposta = await app.inject({
+      method: 'POST',
+      url: '/sessoes/renovar',
+      headers: { 'x-plataforma': 'web' },
+      cookies: { cadencia_renovacao: cookie!.value },
+    });
+
+    expect(resposta.statusCode).toBe(200);
+    expect(resposta.json().acesso).toBeTruthy();
+  });
+
+  it('corpo vazio com content-type JSON é aceito', async () => {
+    // A combinação é legítima: quem manda o token no cookie não tem corpo.
+    const usuario = await criarUsuario(sql, { papel: 'aluno' });
+    const { cookies } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'web');
+
+    const cookie = cookies.find((c) => c.name === 'cadencia_renovacao');
+
+    const resposta = await app.inject({
+      method: 'POST',
+      url: '/sessoes/renovar',
+      headers: { 'x-plataforma': 'web', 'content-type': 'application/json' },
+      cookies: { cadencia_renovacao: cookie!.value },
+      payload: '',
+    });
+
+    expect(resposta.statusCode).toBe(200);
+  });
+
+  it('corpo malformado continua sendo recusado', async () => {
+    // Aceitar vazio não pode virar aceitar qualquer coisa.
+    const resposta = await app.inject({
+      method: 'POST',
+      url: '/sessoes',
+      headers: { 'content-type': 'application/json' },
+      payload: '{isso nao e json',
+    });
+
+    expect(resposta.statusCode).toBe(400);
+  });
+
+  it('sair funciona sem corpo', async () => {
+    const usuario = await criarUsuario(sql, { papel: 'aluno' });
+    const { cookies } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'web');
+
+    const cookie = cookies.find((c) => c.name === 'cadencia_renovacao');
+
+    const resposta = await app.inject({
+      method: 'DELETE',
+      url: '/sessoes',
+      headers: { 'x-plataforma': 'web' },
+      cookies: { cadencia_renovacao: cookie!.value },
+    });
+
+    expect(resposta.statusCode).toBe(204);
+  });
+});
+
+describe('quem sou eu', () => {
+  it('devolve o usuário completo, e não o conteúdo do token', async () => {
+    /**
+     * O token carrega só `id` e `papel`. Devolver o conteúdo dele aqui entregava
+     * um usuário sem nome, e a tela que o exibe quebrava.
+     */
+    const usuario = await criarUsuario(sql, { papel: 'professor', nome: 'Helena Prado' });
+    const { corpo } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'mobile');
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: '/eu',
+      headers: { authorization: `Bearer ${corpo.acesso}` },
+    });
+
+    expect(resposta.json().usuario).toMatchObject({
+      nome: 'Helena Prado',
+      papel: 'professor',
+    });
+    expect(resposta.json().usuario.email).toBeTruthy();
+  });
+
+  it('nunca devolve a senha', async () => {
+    const usuario = await criarUsuario(sql, { papel: 'aluno' });
+    const { corpo } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'mobile');
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: '/eu',
+      headers: { authorization: `Bearer ${corpo.acesso}` },
+    });
+
+    expect(JSON.stringify(resposta.json())).not.toContain('senha');
+  });
+
+  it('conta removida deixa de ser aceita antes do token vencer', async () => {
+    // É a razão de buscar no banco em vez de confiar no token.
+    const usuario = await criarUsuario(sql, { papel: 'aluno' });
+    const { corpo } = await entrar(app, { ...usuario, senha: SENHA_PADRAO }, 'mobile');
+
+    await sql`DELETE FROM usuarios WHERE id = ${usuario.id}`;
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: '/eu',
+      headers: { authorization: `Bearer ${corpo.acesso}` },
+    });
+
+    expect(resposta.statusCode).toBe(401);
   });
 });

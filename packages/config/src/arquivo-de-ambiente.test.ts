@@ -10,7 +10,7 @@ let pasta: string;
  * As variáveis são apagadas uma a uma, e não com `process.env = {...}`.
  *
  * Reatribuir o objeto inteiro funciona em Node puro, mas o Vitest substitui
- * `process.env` por um proxy para isolar ambiente entre testes — e a
+ * `process.env` por um proxy para isolar ambiente entre testes, e a
  * reatribuição não chega ao valor real. O resultado é um teste que passa
  * sozinho e falha quando roda depois de outro, que é o pior tipo de teste
  * instável: parece bug do código.

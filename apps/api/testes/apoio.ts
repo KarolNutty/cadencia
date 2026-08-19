@@ -10,7 +10,7 @@ import { construirServidor } from '../src/servidor';
  *
  * Roda contra o **Postgres de verdade**, o mesmo motor de produção, subido pelo
  * `docker compose`. Banco falso não pega constraint violada, índice único nem
- * transação que não fecha — e é exatamente aí que os bugs de persistência
+ * transação que não fecha, e é exatamente aí que os bugs de persistência
  * moram.
  */
 
@@ -20,7 +20,7 @@ let bancoCompartilhado: Banco | null = null;
 
 export function ambienteDeTeste() {
   // `obrigatorio` porque aqui o arquivo é a única fonte esperada. Sem ele, o
-  // erro seria "DATABASE_URL: Required" — que faz procurar problema de
+  // erro seria "DATABASE_URL: Required", que faz procurar problema de
   // configuração quando o que falta é copiar um arquivo.
   try {
     carregarArquivoDeAmbiente({ nome: '.env.teste', obrigatorio: true });
@@ -79,6 +79,8 @@ export async function encerrarBanco(): Promise<void> {
 
 export interface UsuarioDeTeste {
   id: string;
+  /** O nome também é devolvido: telas o exibem, e testes precisam conferir. */
+  nome: string;
   email: string;
   senha: string;
   papel: 'aluno' | 'professor';
@@ -116,7 +118,7 @@ export async function criarUsuario(
     RETURNING id
   `;
 
-  return { id: linha!.id, email: email.toLowerCase(), senha, papel };
+  return { id: linha!.id, nome, email: email.toLowerCase(), senha, papel };
 }
 
 export async function construirApp(sql: Banco): Promise<FastifyInstance> {
@@ -126,9 +128,16 @@ export async function construirApp(sql: Banco): Promise<FastifyInstance> {
 }
 
 /** Entra e devolve o que a resposta trouxe, incluindo os cookies. */
+/**
+ * Pede só o que usa.
+ *
+ * Exigir o `UsuarioDeTeste` inteiro obrigaria quem monta credencial a partir de
+ * uma consulta a inventar campos que a função nem lê, e cada campo novo no tipo
+ * quebraria esses lugares sem motivo.
+ */
 export async function entrar(
   app: FastifyInstance,
-  usuario: UsuarioDeTeste,
+  usuario: { email: string; senha: string },
   plataforma: 'web' | 'mobile' = 'mobile',
 ) {
   const resposta = await app.inject({

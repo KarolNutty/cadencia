@@ -7,12 +7,13 @@ import {
 import type { DiaDeEstudo } from '@cadencia/dominio';
 import { diaDeEstudoDe } from '@cadencia/dominio';
 import { semPermissao } from '../../compartilhado/erros';
+import { idsDaRota } from '../../compartilhado/parametros';
 import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import type { ServicoDeEstudo } from './servico';
 
 /**
  * O "hoje" do servidor, usado só para conferir se o dia informado pelo app é
- * plausível. Quem manda no dia de estudo é o cliente — ver `servico.ts`.
+ * plausível. Quem manda no dia de estudo é o cliente, ver `servico.ts`.
  */
 function hojeNoServidor(): DiaDeEstudo {
   return diaDeEstudoDe(new Date(), 'UTC');
@@ -53,7 +54,7 @@ export async function registrarRotasDeEstudo(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId } = requisicao.params as { turmaId: string };
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
 
       // O id do professor vem do token: não existe forma de pedir o painel da
       // turma de outra pessoa. E o "hoje" de cada aluno sai do fuso dele.
@@ -68,7 +69,7 @@ export async function registrarRotasDeEstudo(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId } = requisicao.params as { turmaId: string };
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
       return estudo.palavrasParaAula(usuario.id, turmaId);
     },
   );
@@ -80,10 +81,7 @@ export async function registrarRotasDeEstudo(
       const usuario = usuarioDaRequisicao(requisicao);
       if (usuario.papel !== 'professor') throw semPermissao('Esta área é do professor.');
 
-      const { turmaId, alunoId } = requisicao.params as {
-        turmaId: string;
-        alunoId: string;
-      };
+      const { turmaId, alunoId } = idsDaRota(requisicao, 'turmaId', 'alunoId');
 
       return estudo.sinalizadasDoAluno(usuario.id, turmaId, alunoId);
     },

@@ -1,3 +1,5 @@
+import { ErroDaApi } from '../../compartilhado/erros';
+import { erroDoProvedor } from '../../compartilhado/provedor-de-ia';
 import {
   REGISTRO_POR_NIVEL,
   type Fala,
@@ -65,7 +67,24 @@ export function interpretarResposta(bruto: string): RespostaDaConversa {
     .replace(/```\s*$/i, '')
     .trim();
 
-  const dados = JSON.parse(semCercas) as { resposta?: unknown; correcoes?: unknown };
+  /*
+   * JSON quebrado vira erro que explica, e não `SyntaxError`.
+   *
+   * A mensagem original fala de posição e coluna, o que manda quem investiga
+   * procurar defeito no leitor. O problema é outro: o modelo devolveu algo que
+   * não é JSON válido, e o que importa saber é isso.
+   */
+  let dados: { resposta?: unknown; correcoes?: unknown };
+
+  try {
+    dados = JSON.parse(semCercas) as typeof dados;
+  } catch {
+    throw new ErroDaApi(
+      'servico_indisponivel',
+      'A resposta da IA veio em formato inesperado.',
+      [{ campo: 'provedor', motivo: `começo do que veio: ${semCercas.slice(0, 120)}` }],
+    );
+  }
 
   const correcoes = Array.isArray(dados.correcoes) ? dados.correcoes : [];
 
@@ -86,6 +105,7 @@ export function interpretarResposta(bruto: string): RespostaDaConversa {
 
 export function criarProvedorGemini(
   chave: string,
+  modelo: string,
   buscar: typeof fetch = fetch,
 ): ProvedorDeConversa {
   return {
@@ -108,7 +128,7 @@ export function criarProvedorGemini(
       ];
 
       const resposta = await buscar(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-goog-api-key': chave },
@@ -119,21 +139,61 @@ export function criarProvedorGemini(
               // Mais alta que na redação: conversa repetitiva desanima, e aqui
               // variar é qualidade, não risco.
               temperature: 0.8,
-              maxOutputTokens: 400,
+
+              /*
+               * Folgado de propósito.
+               *
+               * O limite anterior era 400, o que parecia generoso para três
+               * frases. Modelos recentes gastam parte do orçamento raciocinando
+               * antes de escrever, então sobra pouco para a resposta e o JSON
+               * é cortado no meio. O sintoma é um erro de sintaxe que parece
+               * bug de leitura, e não falta de espaço.
+               *
+               * A conta que importa não é quanto a resposta ocupa, é quanto o
+               * modelo consome para produzi-la.
+               */
+              maxOutputTokens: 2048,
               responseMimeType: 'application/json',
             },
           }),
         },
       );
 
-      if (!resposta.ok) throw new Error(`Gemini respondeu ${resposta.status}`);
+      if (!resposta.ok) throw await erroDoProvedor(resposta, chave);
 
       const dados = (await resposta.json()) as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
+        candidates?: {
+          content?: { parts?: { text?: string }[] };
+          finishReason?: string;
+        }[];
       };
 
-      const texto = dados.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!texto) throw new Error('Gemini não devolveu conteúdo.');
+      const candidato = dados.candidates?.[0];
+      const texto = candidato?.content?.parts?.[0]?.text;
+
+      /*
+       * Resposta cortada por limite é reconhecida antes de tentar interpretar.
+       *
+       * Sem isto, o JSON truncado estoura no `JSON.parse` e o erro fala de
+       * sintaxe, o que manda quem investiga para o lado errado: o problema não
+       * é a leitura, é que a resposta nunca terminou.
+       */
+      if (candidato?.finishReason === 'MAX_TOKENS') {
+        throw new ErroDaApi(
+          'servico_indisponivel',
+          'A resposta da IA foi cortada por limite de tamanho.',
+          [{ campo: 'provedor', motivo: 'finishReason: MAX_TOKENS' }],
+        );
+      }
+
+      if (!texto) {
+        throw new ErroDaApi('servico_indisponivel', 'A IA não devolveu conteúdo.', [
+          {
+            campo: 'provedor',
+            motivo: `finishReason: ${candidato?.finishReason ?? 'ausente'}`,
+          },
+        ]);
+      }
 
       return interpretarResposta(texto);
     },
@@ -185,6 +245,9 @@ export function criarProvedorSimulado(): ProvedorDeConversa {
   };
 }
 
-export function escolherProvedor(chave: string | undefined): ProvedorDeConversa {
-  return chave ? criarProvedorGemini(chave) : criarProvedorSimulado();
+export function escolherProvedor(
+  chave: string | undefined,
+  modelo: string,
+): ProvedorDeConversa {
+  return chave ? criarProvedorGemini(chave, modelo) : criarProvedorSimulado();
 }

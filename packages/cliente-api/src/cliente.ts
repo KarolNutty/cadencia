@@ -3,13 +3,13 @@ import type { Erro } from '@cadencia/contrato';
 /**
  * O cliente HTTP da API, compartilhado pelo app e pelo painel.
  *
- * A parte que vale compartilhar não é "montar um fetch" — é a **fila única de
+ * A parte que vale compartilhar não é "montar um fetch", é a **fila única de
  * renovação**. Sem ela, várias chamadas expirando ao mesmo tempo disparariam
  * renovações simultâneas com o mesmo token, e o servidor, que invalida o token
  * a cada uso, leria isso como token roubado e derrubaria a sessão. Escrever
  * essa lógica duas vezes é escrever duas chances de errar.
  *
- * O que **muda** entre as plataformas é onde o token de renovação mora — corpo
+ * O que **muda** entre as plataformas é onde o token de renovação mora, corpo
  * da requisição no app, cookie `httpOnly` no navegador. Por isso a renovação em
  * si é injetada, e só a coordenação fica aqui.
  *
@@ -24,6 +24,24 @@ export interface Tokens {
 
 export interface OpcoesDoCliente {
   baseUrl: string;
+
+  /**
+   * Quem está chamando.
+   *
+   * O servidor decide por aqui onde o token de renovação vai: cookie
+   * `httpOnly` para o navegador, corpo da resposta para o aplicativo. As duas
+   * plataformas enfrentam ameaças diferentes, e a escolha errada não falha de
+   * forma visível.
+   *
+   * Um navegador que se declara aplicativo recebe o token no corpo, perde a
+   * proteção contra script injetado, e **nenhum cookie é criado** — então a
+   * sessão morre no primeiro recarregamento, que é o sintoma que aparece.
+   *
+   * Era fixo em `mobile` porque este cliente nasceu no aplicativo. Ao ser
+   * compartilhado com o painel, virou o valor errado em silêncio.
+   */
+  plataforma: 'web' | 'mobile';
+
   obterTokens: () => Promise<Tokens | null>;
   salvarTokens: (tokens: Tokens) => Promise<void>;
   /** Chamado quando a renovação falha: a sessão acabou de verdade. */
@@ -45,7 +63,7 @@ export interface OpcoesDoCliente {
    *
    * O tipo é escrito à mão em vez de usar `RequestCredentials`, que só existe
    * quando a biblioteca DOM está carregada. Este pacote é compartilhado com o
-   * servidor e com o React Native, onde ela não está — e depender dela faria a
+   * servidor e com o React Native, onde ela não está, e depender dela faria a
    * verificação de tipos quebrar em dois dos três lugares.
    */
   credenciais?: 'omit' | 'same-origin' | 'include';
@@ -101,6 +119,7 @@ export interface OpcoesDaChamada {
 
 export function criarCliente({
   baseUrl,
+  plataforma,
   obterTokens,
   salvarTokens,
   aoPerderSessao,
@@ -113,7 +132,7 @@ export function criarCliente({
    *
    * **É a peça que impede o app de se deslogar sozinho.** Quando o token de
    * acesso expira, várias chamadas em paralelo recebem 401 ao mesmo tempo. Sem
-   * esta fila, cada uma dispararia a própria renovação — e o servidor, que
+   * esta fila, cada uma dispararia a própria renovação, e o servidor, que
    * invalida o token de renovação a cada uso, veria o mesmo token chegando
    * várias vezes. Isso é exatamente a assinatura de um token roubado, então ele
    * derrubaria a família inteira e o aluno seria expulso no meio do estudo.
@@ -154,8 +173,15 @@ export function criarCliente({
         method: opcoes.metodo ?? 'GET',
         ...(credenciais ? { credentials: credenciais } : {}),
         headers: {
-          'content-type': 'application/json',
-          'x-plataforma': 'mobile',
+          /*
+           * O tipo do conteúdo só é anunciado quando existe conteúdo.
+           *
+           * Um `DELETE` sem corpo com `content-type: application/json` é
+           * recusado pelo servidor antes de a rota rodar, e o erro fala de
+           * corpo vazio, o que não tem relação com o que a pessoa pediu.
+           */
+          ...(opcoes.corpo === undefined ? {} : { 'content-type': 'application/json' }),
+          'x-plataforma': plataforma,
           ...(tokenDeAcesso ? { authorization: `Bearer ${tokenDeAcesso}` } : {}),
         },
         ...(opcoes.corpo === undefined ? {} : { body: JSON.stringify(opcoes.corpo) }),

@@ -6,12 +6,9 @@ import {
   matricularEntradaSchema,
 } from '@cadencia/contrato';
 import { semPermissao } from '../../compartilhado/erros';
+import { idsDaRota } from '../../compartilhado/parametros';
 import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import type { ServicoDeGestao } from './servico';
-
-interface ParametrosDaTurma {
-  turmaId: string;
-}
 
 export async function registrarRotasDeGestao(
   app: FastifyInstance,
@@ -42,7 +39,7 @@ export async function registrarRotasDeGestao(
 
   app.delete('/turmas/:turmaId', somenteProfessor, async (requisicao, resposta) => {
     const { id } = usuarioDaRequisicao(requisicao);
-    const { turmaId } = requisicao.params as ParametrosDaTurma;
+    const { turmaId } = idsDaRota(requisicao, 'turmaId');
 
     await gestao.arquivarTurma(id, turmaId);
     return resposta.status(204).send();
@@ -53,7 +50,7 @@ export async function registrarRotasDeGestao(
     somenteProfessor,
     async (requisicao, resposta) => {
       const { id } = usuarioDaRequisicao(requisicao);
-      const { turmaId } = requisicao.params as ParametrosDaTurma;
+      const { turmaId } = idsDaRota(requisicao, 'turmaId');
       const entrada = matricularEntradaSchema.parse(requisicao.body);
 
       const saida = await gestao.matricular(id, turmaId, entrada.email);
@@ -69,9 +66,7 @@ export async function registrarRotasDeGestao(
     somenteProfessor,
     async (requisicao, resposta) => {
       const { id } = usuarioDaRequisicao(requisicao);
-      const { turmaId, alunoId } = requisicao.params as ParametrosDaTurma & {
-        alunoId: string;
-      };
+      const { turmaId, alunoId } = idsDaRota(requisicao, 'turmaId', 'alunoId');
 
       await gestao.desmatricular(id, turmaId, alunoId);
       return resposta.status(204).send();
@@ -80,14 +75,14 @@ export async function registrarRotasDeGestao(
 
   app.get('/turmas/:turmaId/baralhos', somenteProfessor, async (requisicao) => {
     const { id } = usuarioDaRequisicao(requisicao);
-    const { turmaId } = requisicao.params as ParametrosDaTurma;
+    const { turmaId } = idsDaRota(requisicao, 'turmaId');
 
     return gestao.listarBaralhos(id, turmaId);
   });
 
   app.post('/turmas/:turmaId/baralhos', somenteProfessor, async (requisicao, resposta) => {
     const { id } = usuarioDaRequisicao(requisicao);
-    const { turmaId } = requisicao.params as ParametrosDaTurma;
+    const { turmaId } = idsDaRota(requisicao, 'turmaId');
     const entrada = criarBaralhoEntradaSchema.parse(requisicao.body);
 
     const baralho = await gestao.criarBaralho(
@@ -101,7 +96,7 @@ export async function registrarRotasDeGestao(
 
   app.post('/baralhos/:baralhoId/palavras', somenteProfessor, async (requisicao) => {
     const { id } = usuarioDaRequisicao(requisicao);
-    const { baralhoId } = requisicao.params as { baralhoId: string };
+    const { baralhoId } = idsDaRota(requisicao, 'baralhoId');
     const entrada = importarPalavrasEntradaSchema.parse(requisicao.body);
 
     return gestao.importarPalavras(id, baralhoId, entrada.texto);
@@ -109,7 +104,7 @@ export async function registrarRotasDeGestao(
 
   app.delete('/baralhos/:baralhoId', somenteProfessor, async (requisicao, resposta) => {
     const { id } = usuarioDaRequisicao(requisicao);
-    const { baralhoId } = requisicao.params as { baralhoId: string };
+    const { baralhoId } = idsDaRota(requisicao, 'baralhoId');
 
     await gestao.apagarBaralho(id, baralhoId);
     return resposta.status(204).send();
@@ -120,10 +115,12 @@ export async function registrarRotasDeGestao(
     somenteProfessor,
     async (requisicao, resposta) => {
       const { id } = usuarioDaRequisicao(requisicao);
-      const { turmaId, alunoId, cartaoId } = requisicao.params as ParametrosDaTurma & {
-        alunoId: string;
-        cartaoId: string;
-      };
+      const { turmaId, alunoId, cartaoId } = idsDaRota(
+        requisicao,
+        'turmaId',
+        'alunoId',
+        'cartaoId',
+      );
 
       await gestao.destravarPalavra(id, turmaId, alunoId, cartaoId);
       return resposta.status(204).send();

@@ -57,6 +57,71 @@ export const minhasTurmasSaidaSchema = z.object({
 /** A escala do Quadro Comum Europeu, usada pelo nivelamento e pelos baralhos. */
 export const nivelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
 
+/** ----------------------------------------------------------- diário */
+
+export const situacaoDePresencaSchema = z.enum(['presente', 'ausente', 'justificada']);
+
+export const registrarAulaEntradaSchema = z.object({
+  dia: diaDeEstudoSchema,
+  conteudo: z.string().trim().min(3, 'Diga o que foi dado na aula.').max(2000),
+  dever: z.string().trim().max(2000).nullable(),
+  /** O link da chamada. É um campo, não integração de vídeo. */
+  encontro: z.string().trim().url('Endereço inválido.').max(500).nullable(),
+  presencas: z.array(
+    z.object({
+      alunoId: identificadorSchema,
+      situacao: situacaoDePresencaSchema,
+    }),
+  ),
+});
+
+export const aulaSchema = z.object({
+  id: identificadorSchema,
+  dia: diaDeEstudoSchema,
+  conteudo: z.string(),
+  dever: z.string().nullable(),
+  encontro: z.string().nullable(),
+});
+
+export const aulasDaTurmaSaidaSchema = z.object({
+  aulas: z.array(
+    aulaSchema.extend({
+      presentes: z.number().int().min(0),
+      ausentes: z.number().int().min(0),
+    }),
+  ),
+});
+
+export const aulaComChamadaSaidaSchema = aulaSchema.extend({
+  presencas: z.array(
+    z.object({ alunoId: identificadorSchema, situacao: situacaoDePresencaSchema }),
+  ),
+});
+
+export const frequenciaSchema = z.object({
+  presentes: z.number().int().min(0),
+  ausentes: z.number().int().min(0),
+  justificadas: z.number().int().min(0),
+  total: z.number().int().min(0),
+  taxa: z.number().min(0).max(1),
+});
+
+export const frequenciaDaTurmaSaidaSchema = z.object({
+  alunos: z.array(
+    frequenciaSchema.extend({
+      alunoId: identificadorSchema,
+      nome: z.string(),
+      emRisco: z.boolean(),
+    }),
+  ),
+});
+
+export const minhasAulasSaidaSchema = z.object({
+  aulas: z.array(aulaSchema.extend({ situacao: situacaoDePresencaSchema.nullable() })),
+  frequencia: frequenciaSchema,
+  emRisco: z.boolean(),
+});
+
 /** --------------------------------------------------------- conversa */
 
 export const correcaoNaFalaSchema = z.object({
@@ -290,7 +355,7 @@ export const criarTurmaEntradaSchema = z.object({
  * Matrícula por e-mail, e não por id.
  *
  * O professor conhece o e-mail do aluno; o id ele nunca viu. Pedir id obrigaria
- * a uma tela de busca antes da matrícula — e a pessoa pode nem ter conta ainda,
+ * a uma tela de busca antes da matrícula, e a pessoa pode nem ter conta ainda,
  * caso em que o convite fica pendente até ela entrar.
  */
 export const matricularEntradaSchema = z.object({
@@ -361,7 +426,7 @@ export const sessaoSaidaSchema = z.object({
  *
  * O aluno avalia trinta cartas em três minutos. Trinta requisições no metrô,
  * com sinal ruim, é o caminho para metade se perder. O lote sobe quando a
- * sessão termina — e, se falhar, ele é reenviado inteiro.
+ * sessão termina, e, se falhar, ele é reenviado inteiro.
  */
 export const enviarRevisoesEntradaSchema = z.object({
   turmaId: identificadorSchema,
@@ -438,6 +503,15 @@ export const codigoDeErroSchema = z.enum([
   'entrada_invalida',
   'credenciais_invalidas',
   'conflito',
+  /**
+   * Um serviço externo falhou.
+   *
+   * Separado dos demais porque a ação de quem recebe é outra: não adianta
+   * corrigir a entrada nem entrar de novo, o que resta é tentar mais tarde ou
+   * conferir a configuração. Tratado como erro genérico, a tela pediria a
+   * mesma coisa em todos os casos.
+   */
+  'servico_indisponivel',
 ]);
 
 export const erroSchema = z.object({
@@ -448,6 +522,14 @@ export const erroSchema = z.object({
 });
 
 export type MinhasTurmasSaida = z.infer<typeof minhasTurmasSaidaSchema>;
+export type SituacaoDePresenca = z.infer<typeof situacaoDePresencaSchema>;
+export type RegistrarAulaEntrada = z.infer<typeof registrarAulaEntradaSchema>;
+export type Aula = z.infer<typeof aulaSchema>;
+export type AulasDaTurmaSaida = z.infer<typeof aulasDaTurmaSaidaSchema>;
+export type AulaComChamadaSaida = z.infer<typeof aulaComChamadaSaidaSchema>;
+export type Frequencia = z.infer<typeof frequenciaSchema>;
+export type FrequenciaDaTurmaSaida = z.infer<typeof frequenciaDaTurmaSaidaSchema>;
+export type MinhasAulasSaida = z.infer<typeof minhasAulasSaidaSchema>;
 export type CorrecaoNaFala = z.infer<typeof correcaoNaFalaSchema>;
 export type FalaDaConversa = z.infer<typeof falaSchema>;
 export type ConversaSaida = z.infer<typeof conversaSaidaSchema>;

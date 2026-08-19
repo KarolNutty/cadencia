@@ -232,7 +232,7 @@ describe('matrícula', () => {
   });
 
   it('convida quem ainda não tem conta, em vez de falhar', async () => {
-    // O professor não pode criar a conta de outra pessoa — definir a senha de
+    // O professor não pode criar a conta de outra pessoa, definir a senha de
     // alguém é o que nunca se deve fazer. O convite espera a pessoa entrar.
     const { acesso } = await professor();
     const turmaId = await criarTurma(acesso);
@@ -363,7 +363,7 @@ describe('matrícula', () => {
 describe('cadastro e convite', () => {
   it('quem se cadastra com e-mail convidado entra na turma na hora', async () => {
     // Sem isto o convite ficaria guardado para sempre, e o professor teria de
-    // convidar de novo — sem saber que precisa.
+    // convidar de novo, sem saber que precisa.
     const { acesso } = await professor();
     const turmaId = await criarTurma(acesso);
 
@@ -514,7 +514,8 @@ describe('baralhos e palavras', () => {
       url: `/baralhos/${baralhoId}/palavras`,
       headers: comToken(acesso),
       payload: {
-        texto: 'though — embora — parece "through"\nto gather; reunir\nawkward = sem jeito',
+        texto:
+          'though \u2014 embora \u2014 parece "through"\nto gather; reunir\nawkward = sem jeito',
       },
     });
 
@@ -537,7 +538,7 @@ describe('baralhos e palavras', () => {
       method: 'POST',
       url: `/baralhos/${baralhoId}/palavras`,
       headers: comToken(acesso),
-      payload: { texto: 'though — embora\npalavra solta\nawkward = sem jeito' },
+      payload: { texto: 'though \u2014 embora\npalavra solta\nawkward = sem jeito' },
     });
 
     expect(resposta.json().criadas).toBe(2);
@@ -551,7 +552,7 @@ describe('baralhos e palavras', () => {
     const turmaId = await criarTurma(acesso);
     const baralhoId = await criarBaralho(acesso, turmaId);
 
-    const corpo = { texto: 'though — embora\nawkward — sem jeito' };
+    const corpo = { texto: 'though \u2014 embora\nawkward \u2014 sem jeito' };
     const url = `/baralhos/${baralhoId}/palavras`;
 
     await app.inject({ method: 'POST', url, headers: comToken(acesso), payload: corpo });
@@ -583,7 +584,7 @@ describe('baralhos e palavras', () => {
       })
     ).json().id;
 
-    const corpo = { texto: 'though — embora' };
+    const corpo = { texto: 'though \u2014 embora' };
 
     await app.inject({
       method: 'POST',
@@ -611,7 +612,7 @@ describe('baralhos e palavras', () => {
       method: 'POST',
       url: `/baralhos/${baralhoAlheio}/palavras`,
       headers: comToken(meu.acesso),
-      payload: { texto: 'though — embora' },
+      payload: { texto: 'though \u2014 embora' },
     });
 
     expect(resposta.statusCode).toBe(404);
@@ -628,7 +629,7 @@ describe('destravar palavra', () => {
       method: 'POST',
       url: `/baralhos/${baralhoId}/palavras`,
       headers: comToken(prof.acesso),
-      payload: { texto: 'though — embora' },
+      payload: { texto: 'though \u2014 embora' },
     });
 
     const aluno = await criarUsuario(sql, { papel: 'aluno', email: 'ana@escola.com.br' });
@@ -721,6 +722,60 @@ describe('destravar palavra', () => {
       method: 'POST',
       url: `/turmas/${turmaId}/alunos/${alunoId}/destravar/${cartaoId}`,
       headers: comToken(intruso.acesso),
+    });
+
+    expect(resposta.statusCode).toBe(404);
+  });
+});
+
+describe('identificadores malformados', () => {
+  /**
+   * Um id que não é UUID chegava ao Postgres e voltava como erro de sintaxe de
+   * tipo. O cliente recebia 500, como se o servidor tivesse quebrado, e o log
+   * enchia de "erro não tratado" para requisições que nunca tiveram chance de
+   * funcionar.
+   *
+   * Validar antes também poupa uma ida ao banco por requisição malformada, que
+   * é o caminho mais barato de sobrecarregar um serviço.
+   */
+
+  it('id de turma que não é UUID responde 400, e não 500', async () => {
+    const { acesso } = await professor();
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: '/turmas/nao-e-uuid/baralhos',
+      headers: comToken(acesso),
+    });
+
+    expect(resposta.statusCode).toBe(400);
+  });
+
+  it('tentativa de injeção pela URL também responde 400', async () => {
+    const { acesso } = await professor();
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: `/turmas/${encodeURIComponent("' OR 1=1--")}/baralhos`,
+      headers: comToken(acesso),
+    });
+
+    expect(resposta.statusCode).toBe(400);
+
+    // E nada foi apagado nem alterado: a consulta nunca chegou a existir.
+    const turmas = await sql`SELECT 1 FROM turmas`;
+    expect(turmas.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it('id válido mas inexistente continua respondendo 404', async () => {
+    // A distinção importa: malformado é erro de quem chamou, inexistente é
+    // resposta legítima.
+    const { acesso } = await professor();
+
+    const resposta = await app.inject({
+      method: 'GET',
+      url: `/turmas/${randomUUID()}/baralhos`,
+      headers: comToken(acesso),
     });
 
     expect(resposta.statusCode).toBe(404);

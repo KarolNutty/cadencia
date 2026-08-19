@@ -6,8 +6,7 @@
 -- Convite de aluno que ainda não tem conta.
 --
 -- O professor matricula por e-mail, e a pessoa pode não existir no sistema. Sem
--- isto, ou a matrícula falha, ou o professor precisa criar a conta de alguém —
--- e definir a senha de outra pessoa é o que nunca se deve fazer.
+-- isto, ou a matrícula falha, ou o professor precisa criar a conta de alguém, -- e definir a senha de outra pessoa é o que nunca se deve fazer.
 CREATE TABLE convites (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   turma_id   UUID NOT NULL REFERENCES turmas (id) ON DELETE CASCADE,

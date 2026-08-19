@@ -46,7 +46,7 @@ describe('ambiente válido', () => {
 
 describe('a aplicação recusa subir', () => {
   it('sem segredo de acesso', () => {
-    // O modo mais comum de vazamento não é o segredo commitado — é o segredo
+    // O modo mais comum de vazamento não é o segredo commitado, é o segredo
     // ausente que vira `?? 'dev'` em algum lugar e passa meses despercebido.
     expect(() => carregarAmbiente(ambiente({}, ['SEGREDO_ACESSO']))).toThrow(
       AmbienteInvalido,
@@ -60,7 +60,7 @@ describe('a aplicação recusa subir', () => {
   });
 
   it('com segredo copiado de exemplo, mesmo esticado até o tamanho mínimo', () => {
-    // O caso real não é alguém usar exatamente "changeme" — é pegar "changeme"
+    // O caso real não é alguém usar exatamente "changeme", é pegar "changeme"
     // e completar até passar na regra de tamanho.
     expect(() =>
       carregarAmbiente(ambiente({ SEGREDO_ACESSO: 'changeme'.repeat(5) })),

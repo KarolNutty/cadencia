@@ -10,7 +10,7 @@ async function principal(): Promise<void> {
 
   // Prepara o hash descartável antes de aceitar tráfego. Deixar para a
   // primeira tentativa de login faria justamente ela custar diferente das
-  // outras — que é exatamente a diferença de tempo que se quer eliminar.
+  // outras, que é exatamente a diferença de tempo que se quer eliminar.
   await prepararHashDeReferencia();
 
   const encerrar = async (sinal: string): Promise<void> => {

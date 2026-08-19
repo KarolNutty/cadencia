@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 /**
  * Põe o conteúdo do `.env` dentro de `process.env`.
  *
- * O Node **não faz isso sozinho** — `process.env` só tem o que o sistema
+ * O Node **não faz isso sozinho**, `process.env` só tem o que o sistema
  * operacional passou. Sem esta chamada, `carregarAmbiente` encontra tudo vazio
  * e a aplicação recusa subir mesmo com o arquivo preenchido do lado.
  *
@@ -17,7 +17,7 @@ import { dirname, join, resolve } from 'node:path';
  *
  * Num monorepo, `npm run migrar -w @cadencia/api` executa com o diretório de
  * trabalho em `apps/api`, e o `.env` fica na raiz. Procurar só em `./` daria
- * "arquivo não encontrado" com o arquivo existindo dois níveis acima — e o erro
+ * "arquivo não encontrado" com o arquivo existindo dois níveis acima, e o erro
  * pareceria problema de configuração.
  */
 function procurarAcima(nome: string, partida: string): string | null {
@@ -25,7 +25,7 @@ function procurarAcima(nome: string, partida: string): string | null {
   let acima = dirname(atual);
 
   // Para quando `dirname` devolve o próprio caminho, que é como a raiz do
-  // disco se anuncia — em qualquer sistema operacional.
+  // disco se anuncia, em qualquer sistema operacional.
   while (atual !== acima) {
     const candidato = join(atual, nome);
     if (existsSync(candidato)) return candidato;
@@ -53,7 +53,7 @@ export interface OpcoesDoArquivo {
  *
  * Não achar não é erro por padrão: em produção as variáveis vêm do orquestrador
  * e arquivo nenhum deveria existir. Quem valida se está tudo lá é o
- * `carregarAmbiente` — e ele valida do mesmo jeito, venha de onde vier.
+ * `carregarAmbiente`, e ele valida do mesmo jeito, venha de onde vier.
  */
 export function carregarArquivoDeAmbiente(opcoes: OpcoesDoArquivo = {}): string | null {
   const { nome = '.env', partida = process.cwd(), obrigatorio = false } = opcoes;

@@ -12,7 +12,7 @@ import postgres from 'postgres';
  *   sql`SELECT * FROM usuarios WHERE id = ${id}`
  *
  * **não é interpolação de texto.** O valor vira parâmetro, sempre, e não existe
- * jeito acidental de concatenar — para montar SQL dinâmico é preciso pedir
+ * jeito acidental de concatenar, para montar SQL dinâmico é preciso pedir
  * explicitamente. Com string comum, um `${}` distraído numa cláusula WHERE é
  * injeção, e ele passa despercebido em revisão porque parece igual ao código
  * ao lado.
@@ -24,7 +24,7 @@ export type Banco = postgres.Sql;
  *
  * Existe para que uma função possa ser chamada dentro ou fora de transação sem
  * duplicação. E, principalmente, para tornar impossível o engano de usar a
- * conexão de fora enquanto uma transação está aberta — que, com pool pequeno,
+ * conexão de fora enquanto uma transação está aberta, que, com pool pequeno,
  * trava esperando a conexão que ela mesma segura.
  */
 export type Executor = postgres.Sql | postgres.TransactionSql;

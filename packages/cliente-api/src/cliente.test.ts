@@ -32,6 +32,7 @@ function montar({ respostas, tokens = TOKENS }: Cenario) {
 
   const cliente = criarCliente({
     baseUrl: 'https://api.teste',
+    plataforma: 'mobile',
     obterTokens: async () => atuais,
     salvarTokens: async (novos) => {
       salvos.push(novos);
@@ -57,13 +58,43 @@ describe('chamada comum', () => {
     );
   });
 
-  it('identifica a plataforma, para o token não vir em cookie', async () => {
+  it('anuncia a plataforma configurada, e não uma fixa', async () => {
+    /**
+     * O servidor decide por este cabeçalho onde o token de renovação vai. Com
+     * o valor fixo em `mobile`, o painel web recebia o token no corpo, perdia
+     * a proteção do cookie `httpOnly` e ficava sem cookie nenhum — então a
+     * sessão morria a cada recarregamento da página.
+     */
     const { cliente, chamadas } = montar({ respostas: [resposta(200)] });
 
     await cliente.chamar('/eu');
 
     expect((chamadas[0]?.opcoes.headers as Record<string, string>)['x-plataforma']).toBe(
       'mobile',
+    );
+  });
+
+  it('o painel se anuncia como web', async () => {
+    const chamadas: { url: string; opcoes: RequestInit }[] = [];
+
+    const buscar = (async (url: string | URL | Request, opcoes?: RequestInit) => {
+      chamadas.push({ url: String(url), opcoes: opcoes ?? {} });
+      return resposta(200, {});
+    }) as unknown as typeof fetch;
+
+    const cliente = criarCliente({
+      baseUrl: 'https://api.teste',
+      plataforma: 'web',
+      obterTokens: async () => TOKENS,
+      salvarTokens: async () => {},
+      aoPerderSessao: async () => {},
+      buscar,
+    });
+
+    await cliente.chamar('/eu');
+
+    expect((chamadas[0]?.opcoes.headers as Record<string, string>)['x-plataforma']).toBe(
+      'web',
     );
   });
 
@@ -103,6 +134,7 @@ describe('erros', () => {
     // outro mostra a mensagem do servidor.
     const cliente = criarCliente({
       baseUrl: 'https://api.teste',
+      plataforma: 'mobile',
       obterTokens: async () => TOKENS,
       salvarTokens: async () => {},
       aoPerderSessao: async () => {},
@@ -117,6 +149,7 @@ describe('erros', () => {
   it('resposta de erro sem JSON ainda vira FalhaDaApi', async () => {
     const cliente = criarCliente({
       baseUrl: 'https://api.teste',
+      plataforma: 'mobile',
       obterTokens: async () => TOKENS,
       salvarTokens: async () => {},
       aoPerderSessao: async () => {},
@@ -154,7 +187,7 @@ describe('renovação de token', () => {
      * É o teste mais importante deste arquivo.
      *
      * Quando o token expira, todas as chamadas em voo recebem 401 juntas. Sem
-     * a fila única, cada uma dispararia a própria renovação — e o servidor, que
+     * a fila única, cada uma dispararia a própria renovação, e o servidor, que
      * invalida o token de renovação a cada uso, veria o mesmo token chegando
      * três vezes. Essa é exatamente a assinatura de um token roubado: ele
      * derrubaria a família inteira, e o aluno seria expulso no meio do estudo.
@@ -241,6 +274,7 @@ describe('renovação de token', () => {
 
     const cliente = criarCliente({
       baseUrl: 'https://api.teste',
+      plataforma: 'mobile',
       obterTokens: async () => TOKENS,
       salvarTokens: async () => {},
       aoPerderSessao: perdaDeSessao,
@@ -254,5 +288,78 @@ describe('renovação de token', () => {
 
     await expect(cliente.chamar('/eu')).rejects.toBeInstanceOf(FalhaDaApi);
     expect(perdaDeSessao).toHaveBeenCalledOnce();
+  });
+});
+
+describe('renovação no navegador', () => {
+  /**
+   * O caso que faltava, e que passou despercebido.
+   *
+   * O servidor tinha teste provando que o modo `web` devolve cookie e o modo
+   * `mobile` devolve corpo. O cliente tinha teste provando que renova ao tomar
+   * 401. Os dois passavam, e mesmo assim o painel deslogava a cada
+   * recarregamento: o cliente pedia o modo errado, e nenhum teste olhava para
+   * a combinação.
+   *
+   * Testar as pontas separadamente não prova que elas se encontram.
+   */
+  it('renova sem token guardado, contando só com o cookie', async () => {
+    const chamadas: { url: string; opcoes: RequestInit }[] = [];
+    let indice = 0;
+
+    const respostas = [
+      resposta(401, { codigo: 'nao_autenticado', mensagem: 'x' }),
+      // O servidor em modo web devolve o acesso e NENHUMA renovação no corpo.
+      resposta(200, { acesso: 'acesso-novo', usuario: { id: 'u1' } }),
+      resposta(200, { usuario: { id: 'u1' } }),
+    ];
+
+    const buscar = (async (url: string | URL | Request, opcoes?: RequestInit) => {
+      chamadas.push({ url: String(url), opcoes: opcoes ?? {} });
+      const proxima = respostas[indice];
+      indice += 1;
+      return proxima!;
+    }) as unknown as typeof fetch;
+
+    let guardado: Tokens | null = null;
+
+    const cliente = criarCliente({
+      baseUrl: 'https://api.teste',
+      plataforma: 'web',
+      credenciais: 'include',
+      obterTokens: async () => guardado,
+      salvarTokens: async (novos) => {
+        guardado = novos;
+      },
+      aoPerderSessao: async () => {},
+      renovarSessao: async (buscarInterno, baseUrl) => {
+        const r = await buscarInterno(`${baseUrl}/sessoes/renovar`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json', 'x-plataforma': 'web' },
+        });
+
+        if (!r.ok) return null;
+
+        const dados = (await r.json()) as { acesso: string };
+        return { acesso: dados.acesso, renovacao: '' };
+      },
+      buscar,
+    });
+
+    const dados = await cliente.chamar<{ usuario: { id: string } }>('/eu');
+
+    expect(dados.usuario.id).toBe('u1');
+
+    // O cookie precisa acompanhar a renovação, senão o servidor não tem o que
+    // trocar pelo acesso novo.
+    const renovacao = chamadas.find((c) => c.url.endsWith('/sessoes/renovar'));
+    expect(renovacao?.opcoes.credentials).toBe('include');
+
+    // E a chamada repetida leva o token que acabou de nascer.
+    const repetida = chamadas.at(-1);
+    expect((repetida?.opcoes.headers as Record<string, string>).authorization).toBe(
+      'Bearer acesso-novo',
+    );
   });
 });

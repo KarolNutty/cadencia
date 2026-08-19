@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { comecarConversaEntradaSchema, falarEntradaSchema } from '@cadencia/contrato';
 import { semPermissao } from '../../compartilhado/erros';
 import { porConta } from '../../compartilhado/limite';
+import { idsDaRota } from '../../compartilhado/parametros';
 import { usuarioDaRequisicao } from '../../compartilhado/autenticar';
 import type { ServicoDeConversa } from './servico';
 
@@ -45,7 +46,7 @@ export async function registrarRotasDeConversa(
     { preHandler: app.exigirEntrada },
     async (requisicao) => {
       const usuario = exigirAluno(requisicao);
-      const { conversaId } = requisicao.params as { conversaId: string };
+      const { conversaId } = idsDaRota(requisicao, 'conversaId');
 
       // O id do aluno vem do token: não existe forma de ler a conversa do colega.
       return conversa.ler(usuario.id, conversaId);
@@ -67,7 +68,7 @@ export async function registrarRotasDeConversa(
     },
     async (requisicao) => {
       const usuario = exigirAluno(requisicao);
-      const { conversaId } = requisicao.params as { conversaId: string };
+      const { conversaId } = idsDaRota(requisicao, 'conversaId');
       const entrada = falarEntradaSchema.parse(requisicao.body);
 
       return conversa.falar(usuario.id, conversaId, entrada.mensagem);

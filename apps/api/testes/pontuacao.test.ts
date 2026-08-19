@@ -32,7 +32,7 @@ afterAll(async () => {
 
 const FUSO = 'America/Sao_Paulo';
 
-/** O dia como o cliente o calcularia — nunca o dia em UTC cru. */
+/** O dia como o cliente o calcularia, nunca o dia em UTC cru. */
 function hoje(): string {
   return diaDeEstudoDe(new Date(), FUSO);
 }
@@ -130,7 +130,7 @@ describe('crédito de XP', () => {
      * É o teste que define a regra do produto.
      *
      * Sem o teto, quem marca "fácil" em trinta cartas lidera o ranking sem ter
-     * estudado — e aprende o comportamento que destrói o próprio agendamento,
+     * estudado, e aprende o comportamento que destrói o próprio agendamento,
      * porque marcar fácil no que não se sabe manda a carta para daqui a meses.
      */
     const { acesso, turmaId, cartoes } = await cenario(30);

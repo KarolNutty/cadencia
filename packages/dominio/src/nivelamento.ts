@@ -4,7 +4,7 @@
  * Um teste fixo de sessenta perguntas mede tédio: o aluno de A1 erra as
  * quarenta últimas e o de C1 acerta as quarenta primeiras, e ninguém aprende
  * nada com isso. O adaptativo escolhe **a próxima pergunta pela resposta
- * anterior** e para quando a incerteza cai — quinze itens bastam para separar
+ * anterior** e para quando a incerteza cai, quinze itens bastam para separar
  * A2 de B1.
  *
  * O modelo é uma busca binária sobre a escala do Quadro Comum Europeu, com duas
@@ -74,7 +74,7 @@ export function iniciarTeste(): EstadoDoTeste {
 /**
  * Registra a resposta e decide o próximo nível.
  *
- * Acertou, sobe um; errou, desce um — **nunca mais que isso**. Saltar dois
+ * Acertou, sobe um; errou, desce um, **nunca mais que isso**. Saltar dois
  * níveis por causa de um chute é como um teste de nivelamento erra: a pessoa
  * cai numa turma onde não entende nada, e desiste antes da segunda aula.
  */
@@ -94,11 +94,11 @@ export function responder(estado: EstadoDoTeste, acertou: boolean): EstadoDoTest
    * A resposta estreita o intervalo.
    *
    * Acertar em X significa "pelo menos X", então o piso sobe até X. Errar em X
-   * significa "abaixo de X" — o teto vai para **X menos um**, e não para X.
+   * significa "abaixo de X", o teto vai para **X menos um**, e não para X.
    *
    * A diferença parece detalhe e não é: mantendo X no intervalo depois de errar
    * ali, ele nunca fecha. O aluno de A2 acerta em A2, sobe para B1, erra, volta
-   * para A2 — e oscila entre os dois até o limite de perguntas, sem nunca
+   * para A2, e oscila entre os dois até o limite de perguntas, sem nunca
    * convergir. O teste `converge antes do máximo` existe por causa disso.
    */
   const menor = acertou ? Math.max(estado.menor, atual) : estado.menor;
@@ -143,7 +143,7 @@ export interface ResultadoDoTeste {
    * coerentes** foram as respostas.
    *
    * Só a largura do intervalo não basta. Quem responde ao acaso pode fechar o
-   * intervalo por sorte e receber confiança máxima — e o professor confiaria
+   * intervalo por sorte e receber confiança máxima, e o professor confiaria
    * num número que não mede nada. A coerência é o que separa "convergiu" de
    * "deu certo por acaso".
    */
@@ -161,7 +161,7 @@ export interface ResultadoDoTeste {
  * O nível ao fim do teste.
  *
  * É o **maior nível em que a pessoa acertou**, e não a média das respostas.
- * Média puxaria para baixo quem errou uma pergunta difícil no começo — e o
+ * Média puxaria para baixo quem errou uma pergunta difícil no começo, e o
  * teste existe para achar o teto, não a nota.
  */
 export function resultado(estado: EstadoDoTeste): ResultadoDoTeste {
@@ -196,7 +196,7 @@ export function resultado(estado: EstadoDoTeste): ResultadoDoTeste {
  * Conta respostas que contradizem a escala.
  *
  * Se a pessoa acertou algo de C1, espera-se que acerte o que for de A2. Errar
- * abaixo do que já provou saber é sinal de chute, de desatenção — ou de que a
+ * abaixo do que já provou saber é sinal de chute, de desatenção, ou de que a
  * pergunta estava mal escrita, o que também interessa saber.
  */
 function contarIncoerencias(respostas: readonly Resposta[]): number {
@@ -209,7 +209,7 @@ function contarIncoerencias(respostas: readonly Resposta[]): number {
   /*
    * `<=`, e não `<`.
    *
-   * Errar **no mesmo nível** em que já se acertou é contradição igual — e é
+   * Errar **no mesmo nível** em que já se acertou é contradição igual, e é
    * exatamente o padrão de quem responde ao acaso, que fica oscilando num nível
    * só. Contar apenas os erros abaixo deixaria esse caso passar com confiança
    * máxima.
@@ -223,7 +223,7 @@ function contarIncoerencias(respostas: readonly Resposta[]): number {
  * Escolhe a próxima pergunta do banco.
  *
  * Prefere uma do nível atual que a pessoa ainda não viu. Se acabaram as do
- * nível, aceita a mais próxima — repetir pergunta invalidaria a medida.
+ * nível, aceita a mais próxima, repetir pergunta invalidaria a medida.
  */
 export function proximaPergunta(
   banco: readonly Pergunta[],

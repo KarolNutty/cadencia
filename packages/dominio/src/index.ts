@@ -24,6 +24,18 @@ export {
 } from './agendamento';
 
 export {
+  type FrequenciaDoAluno,
+  type RegistroDePresenca,
+  type ResumoDaChamada,
+  type Situacao,
+  TAXA_MINIMA,
+  calcularFrequencia,
+  chamadaInicial,
+  emRiscoPorFalta,
+  resumirChamada,
+} from './frequencia';
+
+export {
   type Autor,
   type CorrecaoNaFala,
   type EstadoDaConversa,

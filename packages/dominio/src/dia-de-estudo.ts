@@ -10,7 +10,7 @@ export type DiaDeEstudo = string & { readonly __marca: 'DiaDeEstudo' };
 /**
  * Hora em que o dia de estudo vira.
  *
- * Quem senta para estudar à uma da manhã ainda está no dia de ontem — para ele,
+ * Quem senta para estudar à uma da manhã ainda está no dia de ontem, para ele,
  * o dia não acabou. Se o corte fosse à meia-noite, esse aluno perderia a
  * sequência **por estar estudando**, que é o pior incentivo possível.
  *

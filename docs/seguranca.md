@@ -7,7 +7,7 @@ inviolável costuma ser o que ninguém auditou.
 
 O que existe aqui é outra coisa: um conjunto de ameaças que eu escolhi tratar,
 um controle para cada uma, e um **teste que prova que o controle funciona**.
-Controle sem teste é intenção — e intenção não sobrevive à quarta refatoração.
+Controle sem teste é intenção, e intenção não sobrevive à quarta refatoração.
 
 O que está fora do meu alcance também está escrito, na última seção. Saber onde
 a defesa termina vale tanto quanto a defesa.
@@ -44,7 +44,7 @@ nenhuma ferramenta: ele troca o id na URL e vê o progresso do colega. É a
 categoria que lidera as listas de vulnerabilidade real (IDOR), e ela não aparece
 em teste de rota nem em revisão apressada, porque o endpoint "funciona".
 
-Ter papel de aluno não basta — cada consulta filtra pelo id **do token**, nunca
+Ter papel de aluno não basta, cada consulta filtra pelo id **do token**, nunca
 pelo id que veio no caminho da URL.
 
 Detalhe deliberado: quando o recurso existe mas não é seu, a resposta é **404 e
@@ -76,7 +76,7 @@ clássico que ainda aparece em produção.
 Acesso de 15 minutos, renovação de 30 dias. **A renovação é de uso único**: cada
 uso emite uma nova e invalida a anterior.
 
-Se um token de renovação for usado duas vezes, só há duas explicações — ou ele
+Se um token de renovação for usado duas vezes, só há duas explicações, ou ele
 vazou, ou houve corrida. Nos dois casos a resposta é a mesma: **toda a família
 de tokens daquele aluno é invalidada**, e ele entra de novo. Isso transforma um
 roubo de token silencioso, que duraria trinta dias, em um logout que a pessoa
@@ -88,7 +88,7 @@ servidor não tem como distinguir.
 
 Marcar o token antigo como usado e emitir o novo acontecem **na mesma
 transação**. Se o processo cair no meio, ou o antigo continua válido, ou o novo
-existe — nunca os dois inválidos, o que deslogaria a pessoa sem motivo.
+existe, nunca os dois inválidos, o que deslogaria a pessoa sem motivo.
 
 > Testes: renovação usada duas vezes derruba a família · derrubar uma família não
 > desloga os outros aparelhos · token de renovação não é aceito como acesso ·
@@ -96,7 +96,7 @@ existe — nunca os dois inválidos, o que deslogaria a pessoa sem motivo.
 
 ### 4 · Senha com Argon2id
 
-Argon2id, vencedor do concurso de hashing de senha, com custo de memória — o que
+Argon2id, vencedor do concurso de hashing de senha, com custo de memória, o que
 torna ataque em GPU caro, diferente de bcrypt.
 
 E o login demora igual quando o e-mail não existe: sem isso, a diferença de
@@ -116,7 +116,7 @@ contas com uma tentativa em cada.
 > bloqueia as outras do mesmo endereço**.
 
 O segundo teste existe por causa de um defeito real. O `keyGenerator` lia
-`requisicao.body`, mas rodava no hook `onRequest` — antes de o corpo ser
+`requisicao.body`, mas rodava no hook `onRequest`, antes de o corpo ser
 interpretado. O corpo era `undefined`, a chave degenerava em silêncio para só o
 IP, e cinco tentativas de uma pessoa bloqueariam o login de todo mundo atrás do
 mesmo endereço. Numa escola com rede compartilhada, isso derruba a turma.
@@ -131,7 +131,7 @@ Porque **a ameaça é diferente**, e copiar a mesma solução seria o erro:
 |        | Guarda onde                                                                      | Contra o quê                                                                |
 | ------ | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Web    | Acesso em memória, renovação em cookie `httpOnly` + `Secure` + `SameSite=Strict` | XSS: script injetado não lê memória de outro contexto nem cookie `httpOnly` |
-| Mobile | `expo-secure-store` — Keychain no iOS, Keystore no Android                       | Outro app ou quem pega o aparelho lendo o disco                             |
+| Mobile | `expo-secure-store`, Keychain no iOS, Keystore no Android                        | Outro app ou quem pega o aparelho lendo o disco                             |
 
 `localStorage` está fora nos dois: qualquer script na página lê.
 
@@ -141,7 +141,7 @@ Porque **a ameaça é diferente**, e copiar a mesma solução seria o erro:
 ### 7 · Origem autorizada por lista
 
 CORS com lista explícita, e a aplicação **recusa subir** em produção sem ela ou
-com origem em `http://` — o cookie vai com `Secure` e simplesmente não seria
+com origem em `http://`, o cookie vai com `Secure` e simplesmente não seria
 enviado, o que viraria um bug de login misterioso.
 
 > Testes: produção sem lista de origens não sobe · produção com `http` não sobe
@@ -150,7 +150,7 @@ enviado, o que viraria um bug de login misterioso.
 ### 8 · Validação na fronteira
 
 Todo corpo, query e parâmetro passa por schema zod antes de tocar em qualquer
-regra. O que não está no schema é descartado, não repassado — um `senhaHash`
+regra. O que não está no schema é descartado, não repassado, um `senhaHash`
 vindo do banco não vaza para a resposta porque alguém esqueceu de removê-lo no
 mapeamento.
 
@@ -173,7 +173,7 @@ SQL é constante no código.
 Só `.env.example`, com valores obviamente falsos. A aplicação valida na partida
 e recusa subir com segredo ausente, curto, copiado de exemplo ou sem entropia.
 
-O modo mais comum de vazamento não é o segredo commitado — é o **segredo
+O modo mais comum de vazamento não é o segredo commitado, é o **segredo
 ausente** virando `process.env.X ?? 'dev'`, e a aplicação passando meses
 assinando token com a palavra "dev" sem ninguém notar. Falhar na partida é
 barulhento e acontece uma vez.
@@ -186,15 +186,14 @@ entrou no histórico não sai com um commit de remoção.
 ### 11 · Cabeçalhos de resposta
 
 Helmet: `Content-Security-Policy`, `X-Content-Type-Options`, `Referrer-Policy`,
-`Strict-Transport-Security`. E o cabeçalho que anuncia o servidor é removido —
-não é defesa, mas não há motivo para publicar a versão do que está rodando.
+`Strict-Transport-Security`. E o cabeçalho que anuncia o servidor é removido, não é defesa, mas não há motivo para publicar a versão do que está rodando.
 
 ### 12 · Registro de eventos de autenticação
 
 Entrada, saída, falha de senha, renovação recusada e detecção de reúso ficam
 registrados com data, papel e IP. **Nunca com o token, nem com a senha.**
 
-Sem registro, um vazamento é descoberto pelo usuário — e sempre tarde.
+Sem registro, um vazamento é descoberto pelo usuário, e sempre tarde.
 
 ---
 
@@ -203,7 +202,7 @@ Sem registro, um vazamento é descoberto pelo usuário — e sempre tarde.
 **Playwright** cobre web e API. É a ferramenta certa para navegador, e serve
 também para exercitar a API direto por HTTP.
 
-**Playwright não testa React Native** — isso é confusão comum e vale registrar.
+**Playwright não testa React Native**, isso é confusão comum e vale registrar.
 Para o app a ferramenta é o **Maestro**, que roda no emulador com fluxos em YAML.
 
 Os fluxos que rodam a cada push, do lado do atacante:
@@ -238,7 +237,7 @@ Escrito de propósito, porque conhecer o limite faz parte do controle:
   não o que ainda não foi descoberto.
 - **Dependência ainda não catalogada**: `npm audit` só conhece o que já foi
   publicado. Hoje o projeto está com zero vulnerabilidades conhecidas e o passo
-  **bloqueia** o merge em qualquer alta ou crítica — isso passou a ser possível
+  **bloqueia** o merge em qualquer alta ou crítica, isso passou a ser possível
   quando o aplicativo saiu do repositório e levou junto a cadeia de ferramentas
   do Expo, que trazia vinte e seis avisos insolúveis sem uma troca de versão
   maior.
