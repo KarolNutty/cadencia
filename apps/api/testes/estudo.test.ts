@@ -319,12 +319,7 @@ describe('painel do professor', () => {
 
     const { corpo } = await entrar(
       app,
-      {
-        id: dono!.professor_id,
-        email: linha!.email,
-        senha: SENHA_DE_TESTE,
-        papel: 'professor',
-      },
+      { email: linha!.email, senha: SENHA_DE_TESTE },
       'mobile',
     );
 

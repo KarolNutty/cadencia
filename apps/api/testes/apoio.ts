@@ -79,6 +79,8 @@ export async function encerrarBanco(): Promise<void> {
 
 export interface UsuarioDeTeste {
   id: string;
+  /** O nome também é devolvido: telas o exibem, e testes precisam conferir. */
+  nome: string;
   email: string;
   senha: string;
   papel: 'aluno' | 'professor';
@@ -116,7 +118,7 @@ export async function criarUsuario(
     RETURNING id
   `;
 
-  return { id: linha!.id, email: email.toLowerCase(), senha, papel };
+  return { id: linha!.id, nome, email: email.toLowerCase(), senha, papel };
 }
 
 export async function construirApp(sql: Banco): Promise<FastifyInstance> {
@@ -126,9 +128,16 @@ export async function construirApp(sql: Banco): Promise<FastifyInstance> {
 }
 
 /** Entra e devolve o que a resposta trouxe, incluindo os cookies. */
+/**
+ * Pede só o que usa.
+ *
+ * Exigir o `UsuarioDeTeste` inteiro obrigaria quem monta credencial a partir de
+ * uma consulta a inventar campos que a função nem lê, e cada campo novo no tipo
+ * quebraria esses lugares sem motivo.
+ */
 export async function entrar(
   app: FastifyInstance,
-  usuario: UsuarioDeTeste,
+  usuario: { email: string; senha: string },
   plataforma: 'web' | 'mobile' = 'mobile',
 ) {
   const resposta = await app.inject({

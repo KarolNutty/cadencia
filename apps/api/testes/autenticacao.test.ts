@@ -389,7 +389,14 @@ describe('sair', () => {
 });
 
 describe('rota protegida', () => {
-  it('responde com o usuário do token', async () => {
+  it('responde com o usuário autenticado', async () => {
+    /*
+     * A resposta traz o usuário do BANCO, e não o conteúdo do token.
+     *
+     * O token carrega só `id` e `papel`, de propósito: nome e e-mail mudam, e
+     * um token que os carregue mostra o valor antigo até expirar. Este teste
+     * afirmava o contrário e ficou desatualizado quando a rota foi corrigida.
+     */
     const usuario = await criarUsuario(sql, { papel: 'professor' });
     const { corpo } = await entrar(app, usuario, 'mobile');
 
@@ -400,7 +407,11 @@ describe('rota protegida', () => {
     });
 
     expect(resposta.statusCode).toBe(200);
-    expect(resposta.json().usuario).toEqual({ id: usuario.id, papel: 'professor' });
+    expect(resposta.json().usuario).toMatchObject({
+      id: usuario.id,
+      papel: 'professor',
+      nome: usuario.nome,
+    });
   });
 
   it('recusa sem cabeçalho', async () => {
